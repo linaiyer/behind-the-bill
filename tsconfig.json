@@ -2,5 +2,23 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true
-  }
+  },
+  "content": [
+    "./App.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
+  "theme": {
+    "extend": {
+      "colors": {
+        "primary": "#008080",
+        "text": "#111111",
+        "text-secondary": "#6B6B6B",
+        "background": "#FFFFFF",
+      },
+      "fontFamily": {
+        "worksans": ["WorkSans_400Regular", "WorkSans_700Bold"],
+      },
+    },
+  },
+  "plugins": []
 }
