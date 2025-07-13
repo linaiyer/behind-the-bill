@@ -14,12 +14,20 @@ export interface NewsArticle {
 
 export async function fetchNewsArticles(interests: string[], search?: string): Promise<NewsArticle[]> {
   try {
-    // Combine interests and search into a single query string
-    let query = interests.join(' OR ');
-    if (search && search.trim().length > 0) {
-      query = `${search} OR ${query}`;
+    let url;
+    
+    // If no interests and no search, fetch latest general news
+    if (interests.length === 0 && (!search || search.trim().length === 0)) {
+      url = `https://newsapi.org/v2/top-headlines?country=us&language=en&pageSize=30&apiKey=${NEWS_API_KEY}`;
+    } else {
+      // Combine interests and search into a single query string
+      let query = interests.length > 0 ? interests.join(' OR ') : '';
+      if (search && search.trim().length > 0) {
+        query = query ? `${search} OR ${query}` : search;
+      }
+      url = `${BASE_URL}?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=30&apiKey=${NEWS_API_KEY}`;
     }
-    const url = `${BASE_URL}?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=30&apiKey=${NEWS_API_KEY}`;
+    
     const res = await fetch(url);
     const data = await res.json();
     if (data.status === 'ok' && Array.isArray(data.articles)) {

@@ -44,12 +44,14 @@ export default function HomeScreen() {
 
   // Fetch news articles when interests or search changes
   useEffect(() => {
-    if (interests.length === 0) return;
     setLoading(true);
     console.log('Fetching news with interests:', interests, 'and search:', search);
     fetchNewsArticles(interests, search).then((arts) => {
       console.log('NewsAPI returned articles:', arts);
       setArticles(arts.map((a, idx) => ({ ...a, id: idx + 1 })));
+      setLoading(false);
+    }).catch((error) => {
+      console.error('Error fetching articles:', error);
       setLoading(false);
     });
   }, [interests, search]);
