@@ -3,7 +3,18 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, TextInput, Dimensions,
 import Swiper from 'react-native-deck-swiper';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { fetchNewsArticles, NewsArticle } from '../utils/newsApi';
+
+type RootStackParamList = {
+  Welcome: undefined;
+  Home: undefined;
+  ArticleReader: { article: NewsArticle };
+  Context: { term: string };
+};
+
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
 const HIGHLIGHT = '#008080';
 const BLACK = '#111';
@@ -17,6 +28,7 @@ const navTabs = [
 ];
 
 export default function HomeScreen() {
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const [selectedTab, setSelectedTab] = useState('home');
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -64,6 +76,10 @@ export default function HomeScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
+  const handleArticleTap = (article: NewsArticle) => {
+    navigation.navigate('ArticleReader', { article });
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -101,7 +117,12 @@ export default function HomeScreen() {
             ref={swiperRef}
             cards={articles}
             renderCard={(card) => (
-              <View style={styles.articleCard} key={card.url}>
+              <TouchableOpacity 
+                style={styles.articleCard} 
+                key={card.url}
+                onPress={() => handleArticleTap(card)}
+                activeOpacity={0.95}
+              >
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                   <Text style={styles.articleSource}>{card.source?.name || 'Unknown'}</Text>
                   <Text style={styles.articleTime}> • {new Date(card.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
@@ -109,7 +130,10 @@ export default function HomeScreen() {
                 <Text style={styles.articleTitle}>{card.title}</Text>
                 <Text style={styles.articleSummary}>{card.description || ''}</Text>
                 <Text style={styles.articleReadTime}>{card.author ? `By ${card.author}` : ''}</Text>
-              </View>
+                <View style={styles.tapHint}>
+                  <Text style={styles.tapHintText}>Tap to read</Text>
+                </View>
+              </TouchableOpacity>
             )}
             onSwipedLeft={handleSwipedLeft}
             onSwipedRight={handleSwipedRight}
@@ -265,6 +289,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: BLACK,
     marginTop: 2,
+  },
+  tapHint: {
+    marginTop: 12,
+    alignSelf: 'flex-end',
+  },
+  tapHintText: {
+    fontFamily: 'WorkSans_500Medium',
+    fontSize: 12,
+    color: HIGHLIGHT,
   },
   bottomNavWrap: {
     position: 'absolute',

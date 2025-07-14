@@ -45,4 +45,13 @@ export interface SimulationResult {
   community_impact: string;
   timeline: string;
   recommendations: string[];
-} 
+}
+
+// Navigation types
+export type RootStackParamList = {
+  Welcome: undefined;
+  Home: undefined;
+  ArticleReader: { article: any };
+  Context: { term: string };
+  LegislativeSimulator: { billName: string; billDescription?: string };
+}; 
