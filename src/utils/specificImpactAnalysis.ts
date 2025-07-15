@@ -180,81 +180,209 @@ class SpecificImpactAnalyzer {
   private classifyBill(billName: string, description: string): string {
     const text = `${billName} ${description}`.toLowerCase();
     
-    if (text.includes('infrastructure') || text.includes('transportation') || text.includes('broadband')) {
+    // More comprehensive classification
+    if (text.includes('infrastructure') || text.includes('transportation') || text.includes('broadband') || text.includes('bridge') || text.includes('road')) {
       return 'infrastructure';
     }
-    if (text.includes('healthcare') || text.includes('health') || text.includes('medicare') || text.includes('medicaid')) {
+    if (text.includes('healthcare') || text.includes('health') || text.includes('medicare') || text.includes('medicaid') || text.includes('hospital') || text.includes('insurance') || text.includes('medical')) {
       return 'healthcare';
     }
-    if (text.includes('tax') || text.includes('economic') || text.includes('stimulus') || text.includes('jobs')) {
+    if (text.includes('tax') || text.includes('economic') || text.includes('stimulus') || text.includes('jobs') || text.includes('budget') || text.includes('spending') || text.includes('debt') || text.includes('deficit') || text.includes('funding') || text.includes('appropriation') || text.includes('billion') || text.includes('trillion')) {
       return 'economic';
     }
-    if (text.includes('environment') || text.includes('climate') || text.includes('clean') || text.includes('green')) {
+    if (text.includes('environment') || text.includes('climate') || text.includes('clean') || text.includes('green') || text.includes('energy') || text.includes('carbon') || text.includes('emission')) {
       return 'environmental';
     }
-    if (text.includes('education') || text.includes('school') || text.includes('student')) {
+    if (text.includes('education') || text.includes('school') || text.includes('student') || text.includes('university') || text.includes('college') || text.includes('teacher')) {
       return 'education';
     }
+    if (text.includes('social') || text.includes('welfare') || text.includes('poverty') || text.includes('housing') || text.includes('food') || text.includes('security')) {
+      return 'social';
+    }
     
-    return 'other';
+    // Default to economic for bills with financial implications
+    return 'economic';
   }
 
   private findRelevantHistoricalData(billName: string, description: string, billType: string): HistoricalPolicyData[] {
-    return this.historicalDatabase.filter(policy => {
+    const relevantPolicies = this.historicalDatabase.filter(policy => {
       const policyText = policy.description.toLowerCase();
       const billText = `${billName} ${description}`.toLowerCase();
       
-      // Type matching
-      if (billType === 'economic' && (policyText.includes('tax') || policyText.includes('stimulus'))) return true;
-      if (billType === 'healthcare' && policyText.includes('health')) return true;
-      if (billType === 'environmental' && policyText.includes('clean')) return true;
-      if (billType === 'infrastructure' && policyText.includes('infrastructure')) return true;
+      // More comprehensive matching
+      if (billType === 'economic' && (policyText.includes('tax') || policyText.includes('stimulus') || policyText.includes('economic'))) return true;
+      if (billType === 'healthcare' && (policyText.includes('health') || policyText.includes('care') || policyText.includes('medical'))) return true;
+      if (billType === 'environmental' && (policyText.includes('clean') || policyText.includes('environment') || policyText.includes('climate'))) return true;
+      if (billType === 'infrastructure' && (policyText.includes('infrastructure') || policyText.includes('transport'))) return true;
+      if (billType === 'education' && policyText.includes('education')) return true;
+      if (billType === 'social' && (policyText.includes('social') || policyText.includes('welfare'))) return true;
+      
+      // Match by keywords in bill name
+      if (billText.includes('tax') && policyText.includes('tax')) return true;
+      if (billText.includes('health') && policyText.includes('health')) return true;
+      if (billText.includes('infrastructure') && policyText.includes('infrastructure')) return true;
       
       return false;
     });
+    
+    // Always include at least one relevant policy for comparison
+    if (relevantPolicies.length === 0 && this.historicalDatabase.length > 0) {
+      return [this.historicalDatabase[0]]; // Use first policy as baseline
+    }
+    
+    return relevantPolicies;
   }
 
   private extractBillSections(billName: string, description: string): BillSection[] {
-    // Simplified bill section extraction - in production would parse actual bill text
     const billType = this.classifyBill(billName, description);
-    
+    const text = `${billName} ${description}`.toLowerCase();
     const sections: BillSection[] = [];
     
-    if (billType === 'infrastructure') {
-      sections.push({
-        sectionNumber: "101",
-        title: "Transportation Infrastructure",
-        summary: "Road, bridge, and transit improvements",
-        budgetImpact: 550,
-        affectedMetrics: ['roadConditionIndex', 'constructionJobs', 'commuteTimes', 'gdp'],
-        implementationTimeline: "5 years",
-        dependencies: ["State matching funds", "Environmental reviews"]
-      });
-      
-      sections.push({
-        sectionNumber: "201",
-        title: "Broadband Infrastructure",
-        summary: "High-speed internet expansion",
-        budgetImpact: 65,
-        affectedMetrics: ['broadbandAccess', 'digitalAccess', 'productivity'],
-        implementationTimeline: "3 years",
-        dependencies: ["Local government coordination", "Private sector partnerships"]
-      });
-    }
+    // Analyze text for specific provisions and create relevant sections
+    this.analyzeBillContent(text, sections, billType);
     
-    if (billType === 'healthcare') {
+    // Ensure we always have at least one section for analysis
+    if (sections.length === 0) {
       sections.push({
-        sectionNumber: "101",
-        title: "Coverage Expansion",
-        summary: "Expand insurance coverage eligibility",
-        budgetImpact: 400,
-        affectedMetrics: ['uninsuredRate', 'medicaidEnrollment', 'federalDebt'],
-        implementationTimeline: "2 years",
-        dependencies: ["State participation", "Insurance company cooperation"]
+        sectionNumber: "001",
+        title: "Primary Provisions",
+        summary: `Main provisions of ${billName}`,
+        budgetImpact: this.estimateBudgetFromText(text),
+        affectedMetrics: this.getDefaultMetricsForType(billType),
+        implementationTimeline: "2-4 years",
+        dependencies: ["Congressional approval", "Administrative implementation"]
       });
     }
     
     return sections;
+  }
+  
+  private analyzeBillContent(text: string, sections: BillSection[], billType: string): void {
+    // Look for spending/funding mentions
+    if (text.includes('billion') || text.includes('trillion') || text.includes('funding') || text.includes('appropriation')) {
+      const budgetAmount = this.extractBudgetFromText(text);
+      sections.push({
+        sectionNumber: "100",
+        title: "Funding and Appropriations",
+        summary: "Budget allocations and spending provisions",
+        budgetImpact: budgetAmount,
+        affectedMetrics: ['federalDebt', 'gdp', 'inflation'],
+        implementationTimeline: "1-2 years",
+        dependencies: ["Budget reconciliation", "Appropriations process"]
+      });
+    }
+    
+    // Healthcare provisions
+    if (text.includes('healthcare') || text.includes('medicaid') || text.includes('medicare') || text.includes('insurance')) {
+      sections.push({
+        sectionNumber: "200",
+        title: "Healthcare Provisions",
+        summary: "Healthcare coverage and funding changes",
+        budgetImpact: text.includes('cut') || text.includes('reduce') ? -200 : 300,
+        affectedMetrics: ['uninsuredRate', 'premiumCosts', 'medicaidEnrollment', 'lifeExpectancy'],
+        implementationTimeline: "2-3 years",
+        dependencies: ["State implementation", "Provider network changes"]
+      });
+    }
+    
+    // Infrastructure provisions
+    if (text.includes('infrastructure') || text.includes('transportation') || text.includes('broadband') || text.includes('bridge')) {
+      sections.push({
+        sectionNumber: "300",
+        title: "Infrastructure Investment",
+        summary: "Transportation and digital infrastructure improvements",
+        budgetImpact: 500,
+        affectedMetrics: ['roadConditionIndex', 'constructionJobs', 'broadbandAccess', 'commuteTimes'],
+        implementationTimeline: "5-7 years",
+        dependencies: ["State matching funds", "Environmental reviews"]
+      });
+    }
+    
+    // Environmental provisions
+    if (text.includes('environment') || text.includes('climate') || text.includes('green') || text.includes('clean') || text.includes('energy')) {
+      sections.push({
+        sectionNumber: "400",
+        title: "Environmental and Energy Provisions",
+        summary: "Climate action and clean energy initiatives",
+        budgetImpact: 250,
+        affectedMetrics: ['carbonEmissions', 'renewableEnergyPercent', 'airQualityIndex'],
+        implementationTimeline: "3-10 years",
+        dependencies: ["Technology development", "Industry cooperation"]
+      });
+    }
+    
+    // Tax provisions
+    if (text.includes('tax') || text.includes('credit') || text.includes('deduction')) {
+      const isIncrease = text.includes('increase') || text.includes('raise');
+      sections.push({
+        sectionNumber: "500",
+        title: "Tax Provisions",
+        summary: isIncrease ? "Tax increases and revenue generation" : "Tax cuts and credits",
+        budgetImpact: isIncrease ? 150 : -200,
+        affectedMetrics: ['federalDebt', 'gdp', 'consumerSpending', 'businessInvestment'],
+        implementationTimeline: "1 year",
+        dependencies: ["IRS implementation", "Taxpayer compliance"]
+      });
+    }
+    
+    // Social programs
+    if (text.includes('social') || text.includes('welfare') || text.includes('poverty') || text.includes('housing')) {
+      sections.push({
+        sectionNumber: "600",
+        title: "Social Programs",
+        summary: "Social welfare and assistance programs",
+        budgetImpact: 180,
+        affectedMetrics: ['povertyRate', 'housingAffordability', 'foodSecurity'],
+        implementationTimeline: "2-3 years",
+        dependencies: ["State coordination", "Eligibility verification"]
+      });
+    }
+  }
+  
+  private extractBudgetFromText(text: string): number {
+    // Look for budget numbers in text
+    const billionMatch = text.match(/(\d+(?:\.\d+)?)\s*billion/i);
+    const trillionMatch = text.match(/(\d+(?:\.\d+)?)\s*trillion/i);
+    
+    if (trillionMatch) {
+      return parseFloat(trillionMatch[1]) * 1000;
+    }
+    if (billionMatch) {
+      return parseFloat(billionMatch[1]);
+    }
+    
+    // Default estimates based on keywords
+    if (text.includes('massive') || text.includes('comprehensive')) return 1000;
+    if (text.includes('major') || text.includes('significant')) return 500;
+    if (text.includes('modest') || text.includes('limited')) return 100;
+    
+    return 200; // Default moderate budget
+  }
+  
+  private estimateBudgetFromText(text: string): number {
+    if (text.includes('cut') || text.includes('reduce') || text.includes('decrease')) {
+      return -this.extractBudgetFromText(text);
+    }
+    return this.extractBudgetFromText(text);
+  }
+  
+  private getDefaultMetricsForType(billType: string): string[] {
+    switch (billType) {
+      case 'economic':
+        return ['gdp', 'federalDebt', 'unemployment', 'inflation'];
+      case 'healthcare':
+        return ['uninsuredRate', 'premiumCosts', 'medicaidEnrollment'];
+      case 'infrastructure':
+        return ['roadConditionIndex', 'constructionJobs', 'broadbandAccess'];
+      case 'environmental':
+        return ['carbonEmissions', 'renewableEnergyPercent', 'airQualityIndex'];
+      case 'education':
+        return ['graduationRate', 'schoolFunding', 'studentLoanDebt'];
+      case 'social':
+        return ['povertyRate', 'housingAffordability', 'foodSecurity'];
+      default:
+        return ['gdp', 'federalDebt', 'inflation'];
+    }
   }
 
   private analyzeEconomicImpacts(
@@ -410,8 +538,8 @@ class SpecificImpactAnalyzer {
       section.affectedMetrics.includes(id)
     );
     
-    // Determine if we have enough data
-    const hasEnoughData = historicalData.length >= 1 || relevantSections.length > 0;
+    // Be more aggressive in making predictions - only require insufficient data if we have absolutely no basis
+    const hasEnoughData = historicalData.length >= 1 || relevantSections.length > 0 || this.canInferFromBillContent(billName, billType, id);
     
     if (!hasEnoughData) {
       return {
@@ -504,29 +632,46 @@ class SpecificImpactAnalyzer {
     const billText = billName.toLowerCase();
     let baseImpact = 0;
     
+    // Detect spending vs cutting language
+    const isSpendingBill = billText.includes('funding') || billText.includes('investment') || billText.includes('appropriation') || billText.includes('billion') || billText.includes('trillion');
+    const isCuttingBill = billText.includes('cut') || billText.includes('reduce') || billText.includes('eliminate') || billText.includes('defund');
+    const isLargeBill = billText.includes('comprehensive') || billText.includes('massive') || billText.includes('major') || billText.includes('big') || billText.includes('beautiful');
+    
     // Metric-specific calculations based on bill content and type
     switch (metricId) {
       case 'gdp':
         if (billType === 'infrastructure') baseImpact = 0.8 + (randomSeed - 0.5) * 0.4;
         else if (billType === 'economic') baseImpact = 1.2 + (randomSeed - 0.5) * 0.6;
-        else if (billType === 'healthcare') baseImpact = -0.1 + (randomSeed - 0.5) * 0.3;
+        else if (billType === 'healthcare') baseImpact = isCuttingBill ? -0.3 : 0.1;
+        else if (isSpendingBill) baseImpact = 0.6 + (randomSeed - 0.5) * 0.4;
+        else if (isCuttingBill) baseImpact = -0.4 + (randomSeed - 0.5) * 0.3;
+        if (isLargeBill) baseImpact *= 1.5;
         break;
         
       case 'inflation':
         if (billType === 'economic' && billText.includes('stimulus')) baseImpact = 0.4 + (randomSeed - 0.5) * 0.3;
         else if (billType === 'infrastructure') baseImpact = 0.2 + (randomSeed - 0.5) * 0.2;
         else if (billText.includes('tax cut')) baseImpact = 0.1 + (randomSeed - 0.5) * 0.2;
+        else if (isSpendingBill) baseImpact = 0.3 + (randomSeed - 0.5) * 0.2;
+        else if (isCuttingBill) baseImpact = -0.1 + (randomSeed - 0.5) * 0.1;
+        if (isLargeBill) baseImpact *= 1.3;
         break;
         
       case 'unemployment':
         if (billType === 'infrastructure') baseImpact = -0.5 + (randomSeed - 0.5) * 0.3;
         else if (billType === 'economic') baseImpact = -0.8 + (randomSeed - 0.5) * 0.4;
+        else if (isSpendingBill) baseImpact = -0.4 + (randomSeed - 0.5) * 0.2;
+        else if (isCuttingBill) baseImpact = 0.3 + (randomSeed - 0.5) * 0.2;
+        if (isLargeBill) baseImpact *= 1.2;
         break;
         
       case 'federalDebt':
         if (billText.includes('infrastructure')) baseImpact = 1000 + randomSeed * 500;
         else if (billText.includes('tax cut')) baseImpact = 800 + randomSeed * 400;
-        else if (billText.includes('healthcare')) baseImpact = 600 + randomSeed * 300;
+        else if (billText.includes('healthcare') && !isCuttingBill) baseImpact = 600 + randomSeed * 300;
+        else if (isSpendingBill) baseImpact = 500 + randomSeed * 400;
+        else if (isCuttingBill) baseImpact = -200 + randomSeed * 150;
+        if (isLargeBill) baseImpact *= 1.8;
         break;
         
       case 'uninsuredRate':
@@ -547,21 +692,52 @@ class SpecificImpactAnalyzer {
         break;
         
       // Healthcare metrics
+      case 'uninsuredRate':
+        if (billType === 'healthcare') {
+          if (billText.includes('universal') || billText.includes('medicare for all')) {
+            baseImpact = -12.0 + (randomSeed - 0.5) * 3.0;
+          } else if (billText.includes('expand') || billText.includes('coverage')) {
+            baseImpact = -4.5 + (randomSeed - 0.5) * 1.5;
+          } else if (isCuttingBill || billText.includes('repeal')) {
+            baseImpact = 3.2 + (randomSeed - 0.5) * 1.0;
+          }
+        } else if (billText.includes('health') || billText.includes('medical')) {
+          baseImpact = isCuttingBill ? 2.0 : -1.5;
+        }
+        break;
+        
       case 'premiumCosts':
         if (billType === 'healthcare') {
           if (billText.includes('universal')) baseImpact = -15.0 + (randomSeed - 0.5) * 5.0;
           else if (billText.includes('public option')) baseImpact = -8.0 + (randomSeed - 0.5) * 3.0;
+          else if (isCuttingBill) baseImpact = 12.0 + (randomSeed - 0.5) * 4.0;
+          else baseImpact = -3.0 + (randomSeed - 0.5) * 2.0;
+        } else if (billText.includes('health') || billText.includes('insurance')) {
+          baseImpact = isCuttingBill ? 8.0 : -2.0;
         }
         break;
         
       case 'medicaidEnrollment':
         if (billType === 'healthcare' && billText.includes('expand')) {
           baseImpact = 8.5 + (randomSeed - 0.5) * 3.0;
+        } else if (billType === 'healthcare' && isCuttingBill) {
+          baseImpact = -6.2 + (randomSeed - 0.5) * 2.0;
+        } else if (billText.includes('medicaid')) {
+          baseImpact = isCuttingBill ? -4.0 : 3.5;
         }
         break;
         
       case 'lifeExpectancy':
-        if (billType === 'healthcare') baseImpact = 0.3 + (randomSeed - 0.5) * 0.2;
+        if (billType === 'healthcare') baseImpact = isCuttingBill ? -0.2 : 0.3;
+        else if (billText.includes('health')) baseImpact = isCuttingBill ? -0.1 : 0.1;
+        break;
+        
+      case 'outOfPocketCosts':
+        if (billType === 'healthcare') {
+          baseImpact = isCuttingBill ? 15.0 + (randomSeed - 0.5) * 5.0 : -8.0 + (randomSeed - 0.5) * 3.0;
+        } else if (billText.includes('health') || billText.includes('medical')) {
+          baseImpact = isCuttingBill ? 8.0 : -4.0;
+        }
         break;
         
       // Environmental metrics
@@ -594,37 +770,115 @@ class SpecificImpactAnalyzer {
         
       // Social metrics
       case 'povertyRate':
-        if (billType === 'economic') baseImpact = -1.2 + (randomSeed - 0.5) * 0.5;
+        if (billType === 'economic' || billType === 'social') {
+          baseImpact = isSpendingBill ? -1.2 + (randomSeed - 0.5) * 0.5 : 0.8 + (randomSeed - 0.5) * 0.3;
+        } else if (billText.includes('welfare') || billText.includes('assistance')) {
+          baseImpact = isCuttingBill ? 1.5 : -1.0;
+        }
         break;
         
       case 'incomeInequality':
         if (billType === 'economic') {
-          if (billText.includes('tax')) baseImpact = -0.015 + (randomSeed - 0.5) * 0.01;
+          if (billText.includes('tax')) {
+            const isProgressive = billText.includes('wealthy') || billText.includes('rich') || billText.includes('corporate');
+            baseImpact = isProgressive ? -0.015 : 0.01;
+          }
         }
         break;
         
       case 'housingAffordability':
         if (billType === 'infrastructure' || billText.includes('housing')) {
           baseImpact = 12.0 + (randomSeed - 0.5) * 6.0;
+        } else if (billType === 'social' || billText.includes('affordable')) {
+          baseImpact = isSpendingBill ? 8.0 : -5.0;
+        }
+        break;
+        
+      case 'foodSecurity':
+        if (billType === 'social' || billText.includes('food') || billText.includes('nutrition')) {
+          baseImpact = isCuttingBill ? -4.5 + (randomSeed - 0.5) * 2.0 : 3.2 + (randomSeed - 0.5) * 1.5;
+        }
+        break;
+        
+      case 'mentalhealthSupport':
+        if (billType === 'healthcare' || billText.includes('mental') || billText.includes('behavioral')) {
+          baseImpact = isCuttingBill ? -8.0 + (randomSeed - 0.5) * 3.0 : 6.5 + (randomSeed - 0.5) * 2.5;
         }
         break;
         
       // Infrastructure metrics
       case 'roadConditionIndex':
-        if (billType === 'infrastructure') baseImpact = 1.8 + (randomSeed - 0.5) * 0.6;
+        if (billType === 'infrastructure' || billText.includes('transportation') || billText.includes('road')) {
+          baseImpact = isSpendingBill ? 1.8 + (randomSeed - 0.5) * 0.6 : -0.5;
+        }
         break;
         
       case 'bridgeSafetyScore':
-        if (billType === 'infrastructure') baseImpact = 15.0 + (randomSeed - 0.5) * 5.0;
+        if (billType === 'infrastructure' || billText.includes('bridge') || billText.includes('infrastructure')) {
+          baseImpact = isSpendingBill ? 15.0 + (randomSeed - 0.5) * 5.0 : -3.0;
+        }
         break;
         
       case 'constructionJobs':
-        if (billType === 'infrastructure') baseImpact = 250 + randomSeed * 200;
+        if (billType === 'infrastructure' || billText.includes('infrastructure') || billText.includes('construction')) {
+          baseImpact = isSpendingBill ? 250 + randomSeed * 200 : -50 + randomSeed * 30;
+        } else if (isSpendingBill) {
+          baseImpact = 100 + randomSeed * 80;
+        }
+        break;
+        
+      case 'broadbandAccess':
+        if (billText.includes('broadband') || billText.includes('internet') || billText.includes('digital')) {
+          baseImpact = isSpendingBill ? 8.5 + (randomSeed - 0.5) * 3.0 : -2.0;
+        }
         break;
         
       case 'commuteTimes':
-        if (billType === 'infrastructure') baseImpact = -3.5 + (randomSeed - 0.5) * 1.5;
+        if (billType === 'infrastructure' || billText.includes('transportation')) {
+          baseImpact = isSpendingBill ? -3.5 + (randomSeed - 0.5) * 1.5 : 1.2;
+        }
         break;
+        
+      // Education metrics
+      case 'schoolFunding':
+        if (billType === 'education' || billText.includes('education') || billText.includes('school')) {
+          baseImpact = isCuttingBill ? -2500 + randomSeed * 800 : 1800 + randomSeed * 600;
+        }
+        break;
+        
+      case 'teacherSalaries':
+        if (billType === 'education' || billText.includes('teacher') || billText.includes('education')) {
+          baseImpact = isCuttingBill ? -3.2 + (randomSeed - 0.5) * 1.0 : 4.2 + (randomSeed - 0.5) * 1.5;
+        }
+        break;
+        
+      case 'studentLoanDebt':
+        if (billType === 'education' || billText.includes('student') || billText.includes('loan')) {
+          if (billText.includes('forgiveness') || billText.includes('cancel')) {
+            baseImpact = -15000 + (randomSeed - 0.5) * 5000;
+          } else if (billText.includes('free college') || billText.includes('tuition free')) {
+            baseImpact = -8000 + (randomSeed - 0.5) * 3000;
+          }
+        }
+        break;
+    }
+    
+    // Default predictions for common metrics if no specific case matched
+    if (baseImpact === 0) {
+      switch (metricId) {
+        case 'gdp':
+          baseImpact = isSpendingBill ? 0.3 : -0.1;
+          break;
+        case 'federalDebt':
+          baseImpact = isSpendingBill ? 300 + randomSeed * 200 : -100 + randomSeed * 50;
+          break;
+        case 'inflation':
+          baseImpact = isSpendingBill ? 0.15 : -0.05;
+          break;
+        case 'unemployment':
+          baseImpact = isSpendingBill ? -0.2 : 0.1;
+          break;
+      }
     }
     
     // Adjust based on historical data
@@ -634,6 +888,33 @@ class SpecificImpactAnalyzer {
     }
     
     return baseImpact;
+  }
+  
+  private canInferFromBillContent(billName: string, billType: string, metricId: string): boolean {
+    const billText = billName.toLowerCase();
+    
+    // Economic metrics can usually be inferred from any bill with budget implications
+    if (['gdp', 'federalDebt', 'inflation'].includes(metricId)) {
+      return billText.includes('bill') || billText.includes('act') || billText.includes('budget') || billText.includes('spending');
+    }
+    
+    // Healthcare metrics from healthcare-related bills
+    if (['uninsuredRate', 'premiumCosts', 'medicaidEnrollment'].includes(metricId)) {
+      return billText.includes('health') || billText.includes('care') || billText.includes('medical') || billText.includes('medicaid') || billText.includes('medicare');
+    }
+    
+    // Infrastructure metrics
+    if (['roadConditionIndex', 'constructionJobs', 'broadbandAccess'].includes(metricId)) {
+      return billText.includes('infrastructure') || billText.includes('transport') || billText.includes('broadband') || billText.includes('bridge');
+    }
+    
+    // Environmental metrics
+    if (['carbonEmissions', 'renewableEnergyPercent', 'airQualityIndex'].includes(metricId)) {
+      return billText.includes('environment') || billText.includes('climate') || billText.includes('green') || billText.includes('clean') || billText.includes('energy');
+    }
+    
+    // Default to true for core economic indicators if it's any significant legislation
+    return ['gdp', 'federalDebt'].includes(metricId) && (billText.includes('bill') || billText.includes('act'));
   }
 
   private calculateSectionImpact(metricId: string, section: BillSection, randomSeed: number): number {
@@ -699,31 +980,40 @@ class SpecificImpactAnalyzer {
       reasoning += ` Key driver: ${mainSection.title} (Section ${mainSection.sectionNumber}) with estimated $${mainSection.budgetImpact}B budget impact.`;
     }
     
-    // Add mechanism explanation
+    // Add mechanism explanation based on bill content
+    const billText = billName.toLowerCase();
+    const isCuttingBill = billText.includes('cut') || billText.includes('reduce') || billText.includes('eliminate');
+    
     switch (metricId) {
       case 'inflation':
-        reasoning += ' Inflationary pressure from increased government spending partially offset by productivity gains from infrastructure investment.';
+        reasoning += isCuttingBill ? ' Deflationary pressure from reduced government spending and economic contraction.' : ' Inflationary pressure from increased government spending partially offset by productivity gains.';
         break;
       case 'gdp':
-        reasoning += ' GDP impact through direct government expenditure multiplier effects and long-term productivity improvements.';
+        reasoning += isCuttingBill ? ' GDP contraction from reduced government expenditure and potential job losses in affected sectors.' : ' GDP impact through direct government expenditure multiplier effects and long-term productivity improvements.';
         break;
       case 'unemployment':
-        reasoning += ' Employment effects from direct job creation in targeted sectors and indirect economic stimulus.';
+        reasoning += isCuttingBill ? ' Job losses in government-funded sectors and reduced economic activity from spending cuts.' : ' Employment effects from direct job creation in targeted sectors and indirect economic stimulus.';
         break;
       case 'uninsuredRate':
-        reasoning += ' Coverage expansion through eligibility changes and subsidies, with implementation timeline affecting uptake rates.';
+        reasoning += isCuttingBill ? ' Coverage reduction from eligibility restrictions and funding cuts to healthcare programs.' : ' Coverage expansion through eligibility changes and subsidies, with implementation timeline affecting uptake rates.';
         break;
-      case 'carbonEmissions':
-        reasoning += ' Emission reductions from renewable energy incentives and regulatory standards, with transition costs included.';
+      case 'premiumCosts':
+        reasoning += isCuttingBill ? ' Premium increases due to reduced subsidies and market instability from coverage reductions.' : ' Premium cost reductions through expanded coverage pools and government subsidies.';
         break;
-      case 'graduationRate':
-        reasoning += ' Educational outcomes improvement through funding increases and program reforms, with 3-5 year implementation lag.';
+      case 'medicaidEnrollment':
+        reasoning += isCuttingBill ? ' Enrollment decreases from eligibility restrictions and program funding reductions.' : ' Enrollment increases from expanded eligibility criteria and enhanced benefits.';
+        break;
+      case 'federalDebt':
+        reasoning += isCuttingBill ? ' Debt reduction from decreased government spending, though potential economic contraction may reduce tax revenues.' : ' Debt increase from expanded government spending and program investments.';
         break;
       case 'povertyRate':
-        reasoning += ' Poverty reduction through direct transfers and economic stimulus, with multiplier effects in targeted communities.';
+        reasoning += isCuttingBill ? ' Poverty increases from reduced social safety net and economic support programs.' : ' Poverty reduction through direct transfers and economic stimulus, with multiplier effects in targeted communities.';
         break;
       case 'roadConditionIndex':
-        reasoning += ' Infrastructure improvements through direct investment and state matching funds, with maintenance requirements.';
+        reasoning += isCuttingBill ? ' Infrastructure deterioration from reduced maintenance and investment funding.' : ' Infrastructure improvements through direct investment and state matching funds, with maintenance requirements.';
+        break;
+      case 'constructionJobs':
+        reasoning += isCuttingBill ? ' Job losses in construction and infrastructure sectors from reduced public investment.' : ' Job creation in construction and related industries from infrastructure spending and public works projects.';
         break;
     }
     

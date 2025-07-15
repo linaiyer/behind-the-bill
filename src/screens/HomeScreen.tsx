@@ -1,18 +1,12 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, TextInput, Dimensions, ActivityIndicator } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { fetchNewsArticles, NewsArticle } from '../utils/newsApi';
-
-type RootStackParamList = {
-  Welcome: undefined;
-  Home: undefined;
-  ArticleReader: { article: NewsArticle };
-  Context: { term: string };
-};
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -36,6 +30,14 @@ export default function HomeScreen() {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const swiperRef = useRef(null);
+
+  // Reset to home tab when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedTab('home');
+    }, [])
+  );
+
 
   // Fetch onboarding interests from AsyncStorage
   useEffect(() => {
@@ -78,6 +80,11 @@ export default function HomeScreen() {
 
   const handleArticleTap = (article: NewsArticle) => {
     navigation.navigate('ArticleReader', { article });
+  };
+
+  const handleTabPress = (tabKey: string) => {
+    setSelectedTab(tabKey);
+    // Navigation is handled by MainTabNavigator
   };
 
   return (
@@ -144,7 +151,7 @@ export default function HomeScreen() {
             animateCardOpacity
             disableTopSwipe
             disableBottomSwipe
-            containerStyle={{ flex: 1, marginTop: 0, marginBottom: 0 }}
+            containerStyle={{ flex: 1, marginTop: 0, marginBottom: 100 }}
             cardStyle={{ 
               borderRadius: 12, 
               shadowColor: '#000', 
@@ -164,14 +171,15 @@ export default function HomeScreen() {
           />
         )}
       </View>
-      {/* Bottom Bubble Navigation */}
+      
+      {/* Bottom Bubble Navigation - moved outside swiper container */}
       <View style={styles.bottomNavWrap}>
         <View style={styles.bottomNav}>
           {navTabs.map(tab => (
             <TouchableOpacity
               key={tab.key}
               style={selectedTab === tab.key ? styles.navBubbleSelected : styles.navBubble}
-              onPress={() => setSelectedTab(tab.key)}
+              onPress={() => handleTabPress(tab.key)}
               activeOpacity={0.85}
             >
               <Image
@@ -305,6 +313,8 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 24,
     alignItems: 'center',
+    zIndex: 1000,
+    elevation: 10,
   },
   bottomNav: {
     flexDirection: 'row',
@@ -319,7 +329,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.10,
     shadowRadius: 8,
     elevation: 4,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   navBubble: {
     backgroundColor: BLACK,
@@ -329,12 +339,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 8,
+    zIndex: 1001,
+    elevation: 11,
   },
   navBubbleSelected: {
     backgroundColor: '#fff',
     borderRadius: 32,
     width: 56,
     height: 56,
+    zIndex: 1001,
+    elevation: 11,
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 8,

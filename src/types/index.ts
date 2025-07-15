@@ -54,4 +54,6 @@ export type RootStackParamList = {
   ArticleReader: { article: any };
   Context: { term: string };
   LegislativeSimulator: { billName: string; billDescription?: string };
+  PoliticalFigureSearch: undefined;
+  PoliticalChat: { figureId: string; figureName: string };
 }; 

@@ -2,13 +2,24 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import WelcomeScreen from '../screens/WelcomeScreen';
-import HomeScreen from '../screens/HomeScreen';
+import MainTabNavigator from './MainTabNavigator';
 import ArticleReaderScreen from '../screens/ArticleReaderScreen';
 import ContextScreen from '../screens/ContextScreen';
 import LegislativeSimulatorScreen from '../screens/LegislativeSimulatorScreen';
+import PoliticalChatScreen from '../screens/PoliticalChatScreen';
+import { NewsArticle } from '../utils/newsApi';
 // import SurveyScreen from '../screens/SurveyScreen'; // We'll add this next
 
-const Stack = createStackNavigator();
+export type RootStackParamList = {
+  Welcome: undefined;
+  Home: undefined;
+  ArticleReader: { article: NewsArticle };
+  Context: { term: string };
+  LegislativeSimulator: { billName: string; billDescription?: string };
+  PoliticalChat: { figureId: string; figureName: string };
+};
+
+const Stack = createStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   return (
@@ -18,10 +29,11 @@ export default function AppNavigator() {
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Home" component={MainTabNavigator} />
         <Stack.Screen name="ArticleReader" component={ArticleReaderScreen} />
         <Stack.Screen name="Context" component={ContextScreen} />
         <Stack.Screen name="LegislativeSimulator" component={LegislativeSimulatorScreen} />
+        <Stack.Screen name="PoliticalChat" component={PoliticalChatScreen} />
         {/* <Stack.Screen name="Survey" component={SurveyScreen} /> */}
       </Stack.Navigator>
     </NavigationContainer>
