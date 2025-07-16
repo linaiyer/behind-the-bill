@@ -10,6 +10,7 @@ import {
   Modal,
   ActivityIndicator
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { authService } from '../services/authService';
 import { NewsSubscription } from '../types/auth';
 
@@ -27,6 +28,7 @@ const NEWS_PROVIDERS = [
 ];
 
 export default function NewsSubscriptionsScreen() {
+  const navigation = useNavigation();
   const [subscriptions, setSubscriptions] = useState<NewsSubscription[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
@@ -233,6 +235,9 @@ export default function NewsSubscriptionsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
         <Text style={styles.title}>News Subscriptions</Text>
         <Text style={styles.subtitle}>
           Connect your news subscriptions to see more personalized content
@@ -275,6 +280,19 @@ const styles = StyleSheet.create({
     paddingTop: 64,
     paddingHorizontal: 28,
     paddingBottom: 20,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontFamily: 'WorkSans_600SemiBold',
+    color: THEME_COLOR,
   },
   title: {
     fontSize: 36,

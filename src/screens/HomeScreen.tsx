@@ -7,6 +7,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { fetchNewsArticles, NewsArticle } from '../utils/newsApi';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { useUserPreferences } from '../hooks/useUserPreferences';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -23,35 +24,32 @@ const navTabs = [
 
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { preferences, loadPreferences } = useUserPreferences();
   const [selectedTab, setSelectedTab] = useState('home');
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [interests, setInterests] = useState<string[]>([]);
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const swiperRef = useRef(null);
+  const [seenArticles, setSeenArticles] = useState<string[]>([]);
 
-  // Reset to home tab when screen comes into focus
+  // Reset to home tab and reload preferences when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       setSelectedTab('home');
-    }, [])
+      // Reload preferences when returning to home screen
+      loadPreferences();
+    }, [loadPreferences])
   );
 
-
-  // Fetch onboarding interests from AsyncStorage
+  // Load seen articles from AsyncStorage
   useEffect(() => {
     (async () => {
       try {
-        const surveyData = await AsyncStorage.getItem('surveyData');
-        if (surveyData) {
-          const parsed = JSON.parse(surveyData);
-          setInterests(parsed.interests || []);
-          console.log('Loaded interests from AsyncStorage:', parsed.interests);
-        }
+        const seen = await AsyncStorage.getItem('seenArticles');
+        setSeenArticles(seen ? JSON.parse(seen) : []);
       } catch (e) {
-        setInterests([]);
-        console.log('Failed to load interests from AsyncStorage:', e);
+        setSeenArticles([]);
       }
     })();
   }, []);
@@ -59,16 +57,15 @@ export default function HomeScreen() {
   // Fetch news articles when interests or search changes
   useEffect(() => {
     setLoading(true);
-    console.log('Fetching news with interests:', interests, 'and search:', search);
-    fetchNewsArticles(interests, search).then((arts) => {
-      console.log('NewsAPI returned articles:', arts);
-      setArticles(arts.map((a, idx) => ({ ...a, id: idx + 1 })));
+    fetchNewsArticles(preferences.interests, search).then((arts) => {
+      // Filter out seen articles by URL
+      const filtered = arts.filter((a) => !seenArticles.includes(a.url));
+      setArticles(filtered.map((a, idx) => ({ ...a, id: idx + 1 })));
       setLoading(false);
     }).catch((error) => {
-      console.error('Error fetching articles:', error);
       setLoading(false);
     });
-  }, [interests, search]);
+  }, [preferences.interests, search, seenArticles]);
 
   const handleSwipedLeft = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -78,7 +75,15 @@ export default function HomeScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
-  const handleArticleTap = (article: NewsArticle) => {
+  const handleArticleTap = async (article: NewsArticle) => {
+    // Mark article as seen
+    try {
+      const updatedSeen = Array.from(new Set([...seenArticles, article.url]));
+      setSeenArticles(updatedSeen);
+      await AsyncStorage.setItem('seenArticles', JSON.stringify(updatedSeen));
+    } catch (e) {
+      // Ignore errors
+    }
     navigation.navigate('ArticleReader', { article });
   };
 

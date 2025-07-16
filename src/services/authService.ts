@@ -86,7 +86,7 @@ class AuthService {
         uid: firebaseUser.uid,
         email: firebaseUser.email || '',
         displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-        photoURL: firebaseUser.photoURL || null,
+        photoURL: firebaseUser.photoURL || undefined,
         createdAt: new Date(),
         newsSubscriptions: [],
         preferences: {
@@ -174,16 +174,22 @@ class AuthService {
     if (!currentUser) throw new Error('No authenticated user');
 
     try {
-      await updateDoc(doc(db, 'users', currentUser.uid), {
-        preferences: preferences
-      });
-      
-      // Update local storage
+      // Update local storage first (works offline)
       const user = await this.getCurrentUser();
       if (user) {
         const updatedUser = { ...user, preferences: { ...user.preferences, ...preferences } };
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
         this.notifyAuthStateListeners(updatedUser);
+      }
+
+      // Try to update Firestore (will fail gracefully if offline)
+      try {
+        await updateDoc(doc(db, 'users', currentUser.uid), {
+          preferences: preferences
+        });
+        console.log('User preferences synced to Firestore');
+      } catch (firestoreError) {
+        console.log('Firestore offline - preferences saved locally only');
       }
     } catch (error) {
       console.error('Error updating user preferences:', error);
