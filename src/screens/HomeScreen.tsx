@@ -7,7 +7,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { fetchNewsArticles, NewsArticle } from '../utils/newsApi';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { useUserPreferences } from '../hooks/useUserPreferences';
+import { useUserPreferences, getThemeColors, getFontScale } from '../hooks/useUserPreferences';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -33,6 +33,10 @@ export default function HomeScreen() {
   const swiperRef = useRef(null);
   const [seenArticles, setSeenArticles] = useState<string[]>([]);
 
+  // Get theme colors and font scale based on user preferences
+  const themeColors = getThemeColors(preferences.display.darkMode);
+  const fontScale = getFontScale(preferences.display.fontSize);
+
   // Reset to home tab and reload preferences when screen comes into focus
   useFocusEffect(
     useCallback(() => {
@@ -57,12 +61,17 @@ export default function HomeScreen() {
   // Fetch news articles when interests or search changes
   useEffect(() => {
     setLoading(true);
+    console.log('Fetching news with interests:', preferences.interests, 'search:', search);
+    
     fetchNewsArticles(preferences.interests, search).then((arts) => {
+      console.log('Fetched articles:', arts.length);
       // Filter out seen articles by URL
       const filtered = arts.filter((a) => !seenArticles.includes(a.url));
+      console.log('Articles after filtering seen:', filtered.length);
       setArticles(filtered.map((a, idx) => ({ ...a, id: idx + 1 })));
       setLoading(false);
     }).catch((error) => {
+      console.error('Error fetching news:', error);
       setLoading(false);
     });
   }, [preferences.interests, search, seenArticles]);
@@ -92,20 +101,80 @@ export default function HomeScreen() {
     // Navigation is handled by MainTabNavigator
   };
 
+  // Create dynamic styles based on theme
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      ...styles.container,
+      backgroundColor: themeColors.background,
+    },
+    title: {
+      ...styles.title,
+      color: themeColors.text,
+      fontSize: 36 * fontScale,
+    },
+    subtitle: {
+      ...styles.subtitle,
+      color: themeColors.secondaryText,
+      fontSize: 16 * fontScale,
+    },
+    searchBar: {
+      ...styles.searchBar,
+      backgroundColor: themeColors.card,
+      borderColor: themeColors.border,
+      color: themeColors.text,
+      fontSize: 16 * fontScale,
+    },
+    articleCard: {
+      ...styles.articleCard,
+      backgroundColor: themeColors.card,
+      borderColor: themeColors.border,
+    },
+    articleSource: {
+      ...styles.articleSource,
+      color: themeColors.text,
+      fontSize: 16 * fontScale,
+    },
+    articleTime: {
+      ...styles.articleTime,
+      color: themeColors.secondaryText,
+      fontSize: 15 * fontScale,
+    },
+    articleTitle: {
+      ...styles.articleTitle,
+      color: themeColors.text,
+      fontSize: 22 * fontScale,
+    },
+    articleSummary: {
+      ...styles.articleSummary,
+      color: themeColors.secondaryText,
+      fontSize: 16 * fontScale,
+    },
+    articleReadTime: {
+      ...styles.articleReadTime,
+      color: themeColors.text,
+      fontSize: 15 * fontScale,
+    },
+    swipeText: {
+      ...styles.swipeText,
+      color: themeColors.secondaryText,
+      fontSize: 18 * fontScale,
+    },
+  });
+
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Behind the Bill</Text>
-        <Text style={styles.subtitle}>Understand the context behind the headlines.</Text>
+        <Text style={dynamicStyles.title}>Behind the Bill</Text>
+        <Text style={dynamicStyles.subtitle}>Understand the context behind the headlines.</Text>
       </View>
       {/* Search and Filter Row */}
       <View style={styles.searchRow}>
         <View style={styles.searchBarWrap}>
           <TextInput
-            style={styles.searchBar}
+            style={dynamicStyles.searchBar}
             placeholder="Search articles..."
-            placeholderTextColor={GRAY}
+            placeholderTextColor={themeColors.secondaryText}
             value={search}
             onChangeText={setSearch}
           />
@@ -118,30 +187,30 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
       {/* Swipeable News Cards */}
-      <Text style={styles.swipeText}>Swipe to skip</Text>
+      <Text style={dynamicStyles.swipeText}>Swipe to skip</Text>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         {loading ? (
           <ActivityIndicator size="large" color={HIGHLIGHT} style={{ marginTop: 40 }} />
         ) : articles.length === 0 ? (
-          <Text style={{ color: GRAY, fontSize: 18, marginTop: 40 }}>No news found. Try a different search.</Text>
+          <Text style={{ color: themeColors.secondaryText, fontSize: 18 * fontScale, marginTop: 40 }}>No news found. Try a different search.</Text>
         ) : (
           <Swiper
             ref={swiperRef}
             cards={articles}
             renderCard={(card) => (
               <TouchableOpacity 
-                style={styles.articleCard} 
+                style={dynamicStyles.articleCard} 
                 key={card.url}
                 onPress={() => handleArticleTap(card)}
                 activeOpacity={0.95}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                  <Text style={styles.articleSource}>{card.source?.name || 'Unknown'}</Text>
-                  <Text style={styles.articleTime}> • {new Date(card.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                  <Text style={dynamicStyles.articleSource}>{card.source?.name || 'Unknown'}</Text>
+                  <Text style={dynamicStyles.articleTime}> • {new Date(card.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
                 </View>
-                <Text style={styles.articleTitle}>{card.title}</Text>
-                <Text style={styles.articleSummary}>{card.description || ''}</Text>
-                <Text style={styles.articleReadTime}>{card.author ? `By ${card.author}` : ''}</Text>
+                <Text style={dynamicStyles.articleTitle}>{card.title}</Text>
+                <Text style={dynamicStyles.articleSummary}>{card.description || ''}</Text>
+                <Text style={dynamicStyles.articleReadTime}>{card.author ? `By ${card.author}` : ''}</Text>
                 <View style={styles.tapHint}>
                   <Text style={styles.tapHintText}>Tap to read</Text>
                 </View>
@@ -150,7 +219,7 @@ export default function HomeScreen() {
             onSwipedLeft={handleSwipedLeft}
             onSwipedRight={handleSwipedRight}
             cardIndex={0}
-            backgroundColor={'#fff'}
+            backgroundColor={themeColors.background}
             stackSize={4}
             stackSeparation={8}
             animateCardOpacity
