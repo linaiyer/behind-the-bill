@@ -98,7 +98,21 @@ function getFallbackArticles(): NewsArticle[] {
       url: `https://example.com/congress-infrastructure-${timestamp}`,
       urlToImage: null,
       publishedAt: new Date().toISOString(),
-      content: "Congressional leaders continue negotiations on infrastructure spending..."
+      content: `Congressional leaders continue negotiations on infrastructure spending as the deadline for key legislation approaches. The proposed bill includes significant funding for roads, bridges, broadband expansion, and green energy initiatives across the United States.
+
+House Speaker and Senate Majority Leader held a joint press conference yesterday to outline the key provisions of the legislation. The bill allocates $1.2 trillion over eight years for various infrastructure projects, with particular emphasis on modernizing the nation's aging transportation networks.
+
+Republican leadership has expressed concerns about the scope and cost of the proposed legislation. Senator Johnson stated, "While we all agree that infrastructure investment is necessary, we must ensure fiscal responsibility and focus on truly essential projects that will benefit all Americans."
+
+The legislation includes provisions for electric vehicle charging stations, high-speed rail connections between major metropolitan areas, and upgrading the electrical grid to handle renewable energy sources. Environmental groups have praised these elements as crucial steps toward addressing climate change.
+
+Labor unions have thrown their support behind the bill, citing the potential for millions of new jobs in construction, manufacturing, and technology sectors. AFL-CIO President emphasized that the legislation would create good-paying union jobs while rebuilding America's infrastructure.
+
+The White House has indicated strong support for the measure and is working closely with congressional leadership to secure the necessary votes for passage. President Biden is expected to make a major speech next week highlighting the economic benefits of the infrastructure investment.
+
+Economists project that the infrastructure spending could boost GDP growth by 1.5% annually and create approximately 2.3 million jobs over the next five years. The Congressional Budget Office is currently analyzing the long-term fiscal impact of the proposed legislation.
+
+The debate is expected to continue over the coming weeks as lawmakers seek to address concerns from various stakeholders while maintaining momentum for this significant investment in America's future.`
     },
     {
       source: { id: "fallback", name: "Washington Post" },
@@ -108,7 +122,21 @@ function getFallbackArticles(): NewsArticle[] {
       url: `https://example.com/supreme-court-case-${timestamp + 1}`,
       urlToImage: null,
       publishedAt: new Date(Date.now() - 3600000).toISOString(),
-      content: "Supreme Court justices will review constitutional questions..."
+      content: `Supreme Court justices will review constitutional questions in a landmark case that could fundamentally alter the balance of power between federal agencies and the courts. The case, which centers on the scope of administrative authority, has drawn attention from legal scholars and constitutional experts nationwide.
+
+The legal challenge stems from a dispute over federal agency rulemaking authority and whether agencies can interpret ambiguous statutory language without explicit congressional direction. This question goes to the heart of the administrative state and how federal regulations are created and enforced.
+
+Chief Justice Roberts indicated during oral arguments that the Court is carefully considering the implications for existing precedent while evaluating the constitutional principles at stake. The case has generated amicus briefs from dozens of organizations representing various sectors of the economy.
+
+Justice Thomas pressed attorneys on the historical foundations of administrative power, asking whether the founders intended for agencies to wield such broad interpretive authority. Legal experts suggest this line of questioning could signal a willingness to revisit long-standing judicial precedents.
+
+The business community has shown significant interest in the outcome, with many corporations arguing that regulatory uncertainty hampers economic growth and investment. Environmental groups counter that limiting agency authority could undermine critical protections for public health and safety.
+
+Constitutional law professors note that the case represents a potential inflection point in administrative law. Professor Smith of Harvard Law School observed, "This case could reshape how we understand the relationship between Congress, federal agencies, and the courts for decades to come."
+
+The Department of Justice has defended the current framework, arguing that agencies possess specialized expertise necessary to implement complex regulatory schemes. Solicitor General emphasized that agencies remain accountable through various oversight mechanisms.
+
+A decision is expected by the end of the current term, with implementation likely to have far-reaching consequences across multiple areas of federal regulation including environmental protection, financial oversight, and healthcare policy.`
     },
     {
       source: { id: "fallback", name: "Reuters" },
@@ -118,7 +146,21 @@ function getFallbackArticles(): NewsArticle[] {
       url: `https://example.com/white-house-policy-${timestamp + 2}`,
       urlToImage: null,
       publishedAt: new Date(Date.now() - 7200000).toISOString(),
-      content: "The White House announced new policy measures..."
+      content: `The White House announced new policy measures designed to address rising costs and strengthen economic opportunities for American families. The comprehensive initiative includes targeted tax relief, expanded healthcare access, and investments in workforce development programs.
+
+Press Secretary outlined the three-pillar approach during today's briefing, emphasizing the administration's commitment to tackling affordability challenges while promoting long-term economic growth. The plan builds on previous legislative achievements while introducing new mechanisms for supporting middle-class families.
+
+The first pillar focuses on reducing prescription drug costs through enhanced Medicare negotiation powers and expanded generic drug availability. Health officials estimate these measures could save consumers billions annually while maintaining incentives for pharmaceutical innovation.
+
+Education and workforce development form the second major component, with proposed expansions to community college partnerships and apprenticeship programs. The Department of Labor will oversee implementation of new training initiatives targeting high-demand sectors including renewable energy and advanced manufacturing.
+
+Tax policy changes constitute the third pillar, featuring enhanced child tax credits and small business deductions. Treasury officials indicate the measures are designed to provide immediate relief while maintaining fiscal responsibility through targeted revenue enhancements.
+
+Republican lawmakers have expressed skepticism about the scope and funding mechanisms of the proposal. House Minority Leader stated, "While we support helping American families, we need to ensure these policies are sustainable and don't burden future generations with additional debt."
+
+Business organizations have offered mixed reactions, with manufacturing groups praising workforce development aspects while expressing concerns about regulatory components. The Chamber of Commerce called for bipartisan dialogue to address implementation challenges.
+
+The administration plans to work with congressional leadership on legislative pathways for the initiative, with initial committee hearings expected to begin next month. Implementation timelines vary by component, with some measures requiring immediate action while others involve longer-term planning horizons.`
     },
     {
       source: { id: "fallback", name: "Associated Press" },
@@ -128,7 +170,23 @@ function getFallbackArticles(): NewsArticle[] {
       url: `https://example.com/governors-meeting-${timestamp + 3}`,
       urlToImage: null,
       publishedAt: new Date(Date.now() - 10800000).toISOString(),
-      content: "State governors from across the nation convened..."
+      content: `State governors from across the nation convened for their annual summit to address pressing issues of federalism and interstate cooperation. The three-day gathering focused on healthcare, infrastructure, and emergency response coordination between state and federal authorities.
+
+Governor Martinez of New Mexico, serving as chair of the National Governors Association, emphasized the importance of collaborative approaches to solving complex policy challenges. "States serve as laboratories of democracy, and our experiences can inform effective federal policy," she stated during opening remarks.
+
+Healthcare policy dominated much of the discussion, with governors sharing experiences from Medicaid expansion and state-based health insurance marketplaces. Several governors reported success with innovative programs that could serve as models for federal implementation.
+
+Governor Thompson of Wisconsin highlighted his state's workforce development initiatives, particularly programs connecting unemployed workers with emerging technology sectors. "We've seen remarkable success in retraining programs that bridge the skills gap while supporting economic development," he noted.
+
+Emergency management and disaster response coordination emerged as another key theme. Recent natural disasters have underscored the importance of seamless cooperation between federal agencies and state emergency management systems. Governors called for streamlined communication protocols and resource allocation mechanisms.
+
+The bipartisan nature of the summit was evident in collaborative discussions about infrastructure needs. Republican and Democratic governors found common ground on the importance of federal investment in state transportation networks, broadband expansion, and water system upgrades.
+
+Several governors announced new interstate compacts addressing regional challenges including water rights, transportation coordination, and shared economic development initiatives. These agreements demonstrate states' capacity for solving problems that cross jurisdictional boundaries.
+
+Federal officials participating in the summit praised states' leadership on policy innovation while acknowledging areas where federal coordination could be improved. Deputy Secretary Johnson committed to enhanced consultation with states on regulatory development processes.
+
+The summit concluded with a joint declaration emphasizing the importance of federal-state partnerships in addressing 21st-century challenges while respecting constitutional principles of federalism and state sovereignty.`
     },
     {
       source: { id: "fallback", name: "CNN Politics" },
@@ -138,13 +196,38 @@ function getFallbackArticles(): NewsArticle[] {
       url: `https://example.com/regulatory-reform-${timestamp + 4}`,
       urlToImage: null,
       publishedAt: new Date(Date.now() - 14400000).toISOString(),
-      content: "House committee members voted to advance regulatory reform..."
+      content: `House committee members voted to advance regulatory reform legislation designed to increase transparency and efficiency in federal agency rulemaking processes. The bipartisan measure passed the oversight committee by a vote of 23-17, setting the stage for floor consideration.
+
+The legislation requires agencies to conduct more comprehensive economic impact analyses before implementing new regulations, particularly those affecting small businesses and rural communities. Supporters argue these measures will prevent unnecessary regulatory burdens while maintaining essential protections.
+
+Committee Chair Representative Davis emphasized that the bill strikes an appropriate balance between regulatory oversight and agency flexibility. "We want agencies to have the tools they need to protect Americans while ensuring they consider the real-world impacts of their decisions," Davis explained.
+
+Ranking Member Representative Lee expressed concerns about potential delays in critical safety and environmental regulations. "While we support regulatory efficiency, we cannot allow this process to undermine protections that save lives and protect our environment," Lee stated during committee debate.
+
+The bill includes provisions for enhanced public comment periods and requirements for agencies to respond to substantive comments from stakeholders. Small business advocates have praised these elements as crucial for ensuring diverse voices are heard in the regulatory process.
+
+Environmental organizations have raised questions about the legislation's potential impact on climate and pollution regulations. Several groups argue that extended review processes could delay urgent action on environmental challenges facing communities nationwide.
+
+Business groups across multiple sectors have endorsed the measure, citing the need for predictable and science-based regulatory frameworks. The National Association of Manufacturers highlighted the bill's provisions for regulatory cost-benefit analysis as particularly important for maintaining American competitiveness.
+
+Federal agency officials have indicated willingness to work with Congress on regulatory efficiency while expressing concerns about unfunded mandates that could strain administrative resources. Office of Management and Budget representatives participated in committee hearings throughout the legislative development process.
+
+The bill now moves to the House floor, where leadership has indicated it will be considered under regular order with opportunities for amendments. Senate counterparts have introduced similar legislation, suggesting potential for bicameral action on regulatory reform this session.`
     }
   ];
 }
 
 export async function fetchFullArticleContent(articleUrl: string): Promise<string | null> {
   try {
+    // Check if this is a fallback article URL
+    if (articleUrl.includes('example.com')) {
+      console.log('Detected fallback article, content should be in the article object itself');
+      // For fallback articles, the content is already in the article object
+      // We return null here so the ArticleReaderScreen uses article.content
+      return null;
+    }
+    
+    console.log('Fetching full content from:', articleUrl);
     const response = await fetch(articleUrl);
     let html = await response.text();
     

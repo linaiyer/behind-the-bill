@@ -5,6 +5,8 @@ import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { NewsArticle, fetchFullArticleContent } from '../utils/newsApi';
 import { HighlightedText } from '../components/HighlightedText';
+import { cleanNewsText } from '../utils/htmlEntityDecoder';
+import { useUserPreferences, getThemeColors, getFontScale } from '../hooks/useUserPreferences';
 
 const HIGHLIGHT = '#008080';
 const BLACK = '#111';
@@ -28,8 +30,13 @@ interface ArticleReaderScreenProps {
 
 export default function ArticleReaderScreen({ route, navigation }: ArticleReaderScreenProps) {
   const { article } = route.params;
+  const { preferences } = useUserPreferences();
   const [fullContent, setFullContent] = useState<string | null>(null);
   const [loadingContent, setLoadingContent] = useState(true);
+
+  // Get theme colors and font scale based on user preferences
+  const themeColors = getThemeColors(preferences.display.darkMode);
+  const fontScale = getFontScale(preferences.display.fontSize);
 
   useEffect(() => {
     const loadFullContent = async () => {
@@ -66,40 +73,97 @@ export default function ArticleReaderScreen({ route, navigation }: ArticleReader
     });
   };
 
+  // Create dynamic styles based on theme
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      ...styles.container,
+      backgroundColor: themeColors.background,
+    },
+    headerTitle: {
+      ...styles.headerTitle,
+      color: themeColors.text,
+      fontSize: 18 * fontScale,
+    },
+    source: {
+      ...styles.source,
+      fontSize: 14 * fontScale,
+    },
+    publishDate: {
+      ...styles.publishDate,
+      color: themeColors.secondaryText,
+      fontSize: 14 * fontScale,
+    },
+    author: {
+      ...styles.author,
+      color: themeColors.text,
+      fontSize: 14 * fontScale,
+    },
+    title: {
+      ...styles.title,
+      color: themeColors.text,
+      fontSize: 28 * fontScale,
+    },
+    description: {
+      ...styles.description,
+      color: themeColors.text,
+      fontSize: 18 * fontScale,
+    },
+    bodyText: {
+      ...styles.bodyText,
+      color: themeColors.text,
+      fontSize: 16 * fontScale,
+    },
+    loadingText: {
+      ...styles.loadingText,
+      color: themeColors.secondaryText,
+      fontSize: 16 * fontScale,
+    },
+    fallbackText: {
+      ...styles.fallbackText,
+      color: themeColors.secondaryText,
+      fontSize: 16 * fontScale,
+    },
+    originalArticleHeader: {
+      ...styles.originalArticleHeader,
+      color: themeColors.text,
+      fontSize: 18 * fontScale,
+    },
+  });
+
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={navigation.goBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={BLACK} />
+          <Ionicons name="arrow-back" size={24} color={themeColors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Article</Text>
+        <Text style={dynamicStyles.headerTitle}>Article</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Article metadata */}
         <View style={styles.metadata}>
-          <Text style={styles.source}>{article.source?.name || 'Unknown Source'}</Text>
-          <Text style={styles.publishDate}>{formatDate(article.publishedAt)}</Text>
+          <Text style={dynamicStyles.source}>{article.source?.name || 'Unknown Source'}</Text>
+          <Text style={dynamicStyles.publishDate}>{formatDate(article.publishedAt)}</Text>
           {article.author && (
-            <Text style={styles.author}>By {article.author}</Text>
+            <Text style={dynamicStyles.author}>By {article.author}</Text>
           )}
         </View>
 
         {/* Article title */}
-        <Text style={styles.title}>{article.title}</Text>
+        <Text style={dynamicStyles.title}>{cleanNewsText(article.title)}</Text>
 
         {/* Article content */}
         <View style={styles.articleBody}>
           {article.description && (
-            <Text style={styles.description}>{article.description}</Text>
+            <Text style={dynamicStyles.description}>{cleanNewsText(article.description)}</Text>
           )}
           
           {loadingContent ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={HIGHLIGHT} />
-              <Text style={styles.loadingText}>Loading full article...</Text>
+              <Text style={dynamicStyles.loadingText}>Loading full article...</Text>
             </View>
           ) : fullContent ? (
             <View style={styles.fullContentContainer}>
@@ -112,8 +176,27 @@ export default function ArticleReaderScreen({ route, navigation }: ArticleReader
                 return (
                   <View key={index} style={styles.paragraphContainer}>
                     <HighlightedText 
-                      text={paragraph} 
-                      onTermPress={(term, category) => navigation.navigate('Context', { term })}
+                      text={cleanNewsText(paragraph)} 
+                      onTermPress={(term) => navigation.navigate('Context', { term })}
+                    />
+                  </View>
+                );
+              })}
+            </View>
+          ) : article.content && article.content.length > 200 ? (
+            // If we have substantial content in article.content, display it with highlighting
+            <View style={styles.fullContentContainer}>
+              {article.content.split('\n\n').map((paragraph, index) => {
+                // Skip empty paragraphs
+                if (!paragraph || paragraph.trim().length === 0) {
+                  return null;
+                }
+                
+                return (
+                  <View key={index} style={styles.paragraphContainer}>
+                    <HighlightedText 
+                      text={cleanNewsText(paragraph)} 
+                      onTermPress={(term) => navigation.navigate('Context', { term })}
                     />
                   </View>
                 );
@@ -122,12 +205,12 @@ export default function ArticleReaderScreen({ route, navigation }: ArticleReader
           ) : (
             <>
               {article.content && (
-                <Text style={styles.bodyText}>
-                  {article.content.replace(/\[\+\d+ chars\]$/, '')}
+                <Text style={dynamicStyles.bodyText}>
+                  {cleanNewsText(article.content.replace(/\[\+\d+ chars\]$/, ''))}
                 </Text>
               )}
               <View style={styles.fallbackContainer}>
-                <Text style={styles.fallbackText}>
+                <Text style={dynamicStyles.fallbackText}>
                   Unable to load the full article content. The complete article is available at the original source.
                 </Text>
               </View>
@@ -138,7 +221,7 @@ export default function ArticleReaderScreen({ route, navigation }: ArticleReader
         {/* Read original article button - moved to end */}
         {!loadingContent && (
           <View style={styles.originalArticleSection}>
-            <Text style={styles.originalArticleHeader}>Want to read more?</Text>
+            <Text style={dynamicStyles.originalArticleHeader}>Want to read more?</Text>
             <TouchableOpacity style={styles.readOriginalButton} onPress={handleOpenOriginal}>
               <Text style={styles.readOriginalButtonText}>View Original Article</Text>
               <Ionicons name="open-outline" size={16} color="#fff" style={{ marginLeft: 8 }} />
