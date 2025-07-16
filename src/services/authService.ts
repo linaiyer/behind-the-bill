@@ -1,9 +1,9 @@
 import { 
-  signInWithCredential, 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signOut, 
   onAuthStateChanged, 
-  User as FirebaseUser,
-  GoogleAuthProvider
+  User as FirebaseUser
 } from 'firebase/auth';
 import { 
   doc, 
@@ -15,10 +15,6 @@ import {
 import { auth, db } from '../config/firebase';
 import { User, NewsSubscription, UserPreferences } from '../types/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
-
-WebBrowser.maybeCompleteAuthSession();
 
 class AuthService {
   private authStateListeners: ((user: User | null) => void)[] = [];
@@ -40,17 +36,57 @@ class AuthService {
   }
 
   private async createUserFromFirebaseUser(firebaseUser: FirebaseUser): Promise<User> {
-    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-    
-    if (userDoc.exists()) {
-      return userDoc.data() as User;
-    } else {
-      // Create new user document
-      const newUser: User = {
+    try {
+      console.log('Attempting to get user document for:', firebaseUser.uid);
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      
+      if (userDoc.exists()) {
+        console.log('Existing user found in Firestore');
+        const userData = userDoc.data() as User;
+        // Store in AsyncStorage
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        this.notifyAuthStateListeners(userData);
+        return userData;
+      } else {
+        console.log('Creating new user document in Firestore');
+        // Create new user document
+        const newUser: User = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          photoURL: firebaseUser.photoURL || undefined,
+          createdAt: new Date(),
+          newsSubscriptions: [],
+          preferences: {
+            interests: [],
+            notificationsEnabled: true,
+            theme: 'light'
+          }
+        };
+
+        await setDoc(doc(db, 'users', firebaseUser.uid), {
+          ...newUser,
+          createdAt: serverTimestamp()
+        });
+        
+        console.log('User document created successfully');
+
+        // Store in AsyncStorage
+        await AsyncStorage.setItem('user', JSON.stringify(newUser));
+        this.notifyAuthStateListeners(newUser);
+
+        return newUser;
+      }
+    } catch (firestoreError: any) {
+      console.error('Firestore error:', firestoreError);
+      
+      // If Firestore fails (offline, permission issues, etc.), create a local user
+      console.log('Firestore failed, creating local user fallback');
+      const localUser: User = {
         uid: firebaseUser.uid,
         email: firebaseUser.email || '',
-        displayName: firebaseUser.displayName || '',
-        photoURL: firebaseUser.photoURL || undefined,
+        displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+        photoURL: firebaseUser.photoURL || null,
         createdAt: new Date(),
         newsSubscriptions: [],
         preferences: {
@@ -60,54 +96,63 @@ class AuthService {
         }
       };
 
-      await setDoc(doc(db, 'users', firebaseUser.uid), {
-        ...newUser,
-        createdAt: serverTimestamp()
-      });
-
-      return newUser;
+      // Store in AsyncStorage
+      await AsyncStorage.setItem('user', JSON.stringify(localUser));
+      this.notifyAuthStateListeners(localUser);
+      
+      return localUser;
     }
   }
 
-  async signInWithGoogle(): Promise<User | null> {
+  async signInWithEmail(email: string, password: string, isSignUp: boolean = false): Promise<User | null> {
     try {
-      // For development, simulate a successful Google login
-      console.log('Simulating Google Sign-In...');
+      console.log(`Attempting to ${isSignUp ? 'sign up' : 'sign in'} with email:`, email);
+      let firebaseUser: FirebaseUser;
       
-      // Create a realistic mock user for testing
-      const mockUser: User = {
-        uid: 'google-user-' + Date.now(),
-        email: 'john.doe@gmail.com',
-        displayName: 'John Doe',
-        photoURL: 'https://lh3.googleusercontent.com/a/ACg8ocJ1234567890abcdef=s96-c',
-        createdAt: new Date(),
-        newsSubscriptions: [],
-        preferences: {
-          interests: ['Politics', 'Economy', 'Healthcare'],
-          notificationsEnabled: true,
-          theme: 'light'
-        }
-      };
-
-      // Store user in AsyncStorage
-      await AsyncStorage.setItem('user', JSON.stringify(mockUser));
+      if (isSignUp) {
+        // Create new account
+        console.log('Creating new Firebase user...');
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        firebaseUser = result.user;
+        console.log('Created new user:', firebaseUser.uid);
+      } else {
+        // Sign in existing user
+        console.log('Signing in existing Firebase user...');
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        firebaseUser = result.user;
+        console.log('Signed in existing user:', firebaseUser.uid);
+      }
       
-      // Notify listeners
-      this.notifyAuthStateListeners(mockUser);
+      // Create or get user document (this handles Firestore failures gracefully)
+      const user = await this.createUserFromFirebaseUser(firebaseUser);
       
-      console.log('Mock Google user created:', mockUser);
+      console.log('Successfully authenticated user:', user.email);
+      return user;
       
-      return mockUser;
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Authentication error details:', {
+        code: error.code,
+        message: error.message,
+        details: error
+      });
+      throw error; // Re-throw to let the UI handle the error
     }
   }
+
+  // Keep the old method for backward compatibility (if needed)
+  async signInWithGoogle(): Promise<User | null> {
+    // This method is kept for backward compatibility
+    // but will show an alert asking users to use the email form instead
+    console.log('signInWithGoogle called - redirecting to email auth');
+    return null;
+  }
+
 
   async signOut(): Promise<void> {
     try {
       await signOut(auth);
       await AsyncStorage.removeItem('user');
+      console.log('User signed out successfully');
     } catch (error) {
       console.error('Sign out error:', error);
       throw error;
