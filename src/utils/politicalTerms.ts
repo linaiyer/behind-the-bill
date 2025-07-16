@@ -276,50 +276,124 @@ async function generateContextWithAI(term: string): Promise<ContextData | null> 
   }
 }
 
-// Simulate AI response (in production, replace with actual AI API call)
+// Enhanced fallback context generator with better political understanding
 async function simulateAIResponse(term: string): Promise<ContextData | null> {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 800));
   
-  // Generate basic context for common terms
+  // Generate context based on term patterns and political knowledge
   const termLower = term.toLowerCase();
   
-  if (termLower.includes('federal reserve') || termLower.includes('fed')) {
+  // Handle bills and legislation
+  if (termLower.includes('bill') || termLower.includes('act') || termLower.includes('law')) {
     return {
-      term: "Federal Reserve",
-      briefRundown: "The Federal Reserve is the central banking system of the United States, responsible for conducting monetary policy, supervising banks, and maintaining financial stability. It was established in 1913 to provide the country with a safe, flexible, and stable monetary and financial system.",
+      term: term,
+      briefRundown: `${term} refers to proposed or enacted legislation in the U.S. political system. Bills are formal proposals for new laws or changes to existing laws that must be passed by Congress and signed by the President to become law. The legislative process involves committee review, debate, voting, and potential amendments.`,
       components: [
-        "Board of Governors - Seven-member board appointed by the President",
-        "Federal Open Market Committee (FOMC) - Sets monetary policy and interest rates",
-        "12 Regional Federal Reserve Banks - Serve different geographic regions",
-        "Member Banks - Private banks that are part of the Federal Reserve System"
+        "Legislative text and provisions - the specific language and requirements of the proposed law",
+        "Sponsor and co-sponsors - the lawmakers who introduced and support the legislation",
+        "Committee assignments - which congressional committees review and modify the bill",
+        "Funding mechanisms - how the legislation would be paid for if it requires spending"
       ],
-      proposedImpact: "Maintains price stability, full employment, and moderate long-term interest rates while supervising the banking system to ensure financial stability and consumer protection.",
+      proposedImpact: `${term} aims to address specific policy challenges or social issues through legal and regulatory changes. Like all legislation, it would affect different groups and regions in various ways, potentially creating benefits for some while imposing costs or restrictions on others.`,
       inPracticeByStates: [
-        "Each of the 12 Federal Reserve districts serves multiple states",
-        "Regional Fed banks provide banking services to local financial institutions",
-        "Economic data and research varies by region to reflect local conditions"
-      ],
-      compareContrast: {
-        historicalUS: [
-          "First Bank of the United States (1791-1811) - early attempt at central banking",
-          "Second Bank of the United States (1816-1836) - predecessor central bank",
-          "National Banking System (1863-1913) - precursor to modern banking regulation"
-        ],
-        otherCountries: [
-          "European Central Bank - manages monetary policy for eurozone countries",
-          "Bank of England - UK's central bank, established in 1694",
-          "Bank of Japan - Japan's central bank with similar monetary policy functions"
-        ]
-      }
+        "Federal legislation applies to all 50 states once enacted",
+        "States may have different implementation approaches within federal guidelines",
+        "Some states may benefit more than others depending on the bill's provisions"
+      ]
     };
   }
   
-  // For other terms, generate a basic response
+  // Handle departments and agencies
+  if (termLower.includes('department') || termLower.includes('agency') || termLower.includes('bureau') || termLower.includes('administration')) {
+    return {
+      term: term,
+      briefRundown: `${term} is a federal government organization responsible for implementing and enforcing laws and policies in its area of expertise. Federal agencies are part of the executive branch and carry out the day-to-day operations of government, from regulatory enforcement to service delivery.`,
+      components: [
+        "Leadership structure - typically headed by a Secretary, Administrator, or Director",
+        "Regional offices - field offices that serve different geographic areas",
+        "Specialized divisions - units that focus on specific aspects of the agency's mission",
+        "Budget and personnel - funding and staffing to carry out operations"
+      ],
+      proposedImpact: `${term} implements federal policies that affect citizens, businesses, and state governments. Its regulations and programs can influence economic activity, public safety, environmental protection, or social services depending on its mission.`,
+      inPracticeByStates: [
+        "Federal agencies coordinate with state and local governments on implementation",
+        "Some programs are administered directly by federal employees",
+        "Other programs provide funding or oversight to state-run initiatives"
+      ]
+    };
+  }
+  
+  // Handle committees
+  if (termLower.includes('committee') || termLower.includes('subcommittee')) {
+    return {
+      term: term,
+      briefRundown: `${term} is a specialized group within Congress that focuses on specific policy areas, reviews legislation, conducts oversight of government agencies, and holds hearings on important issues. Committees are where much of the detailed work of Congress happens.`,
+      components: [
+        "Committee members - Representatives or Senators assigned based on expertise and interests",
+        "Chair and ranking member - leaders from the majority and minority parties",
+        "Committee staff - professional staff who provide research and administrative support",
+        "Subcommittees - smaller groups that focus on specific aspects of the committee's jurisdiction"
+      ],
+      proposedImpact: `${term} shapes legislation and government oversight in its area of responsibility. Committee actions can determine which bills advance, how government agencies are held accountable, and what issues receive congressional attention.`,
+      inPracticeByStates: [
+        "Committee decisions affect federal programs and policies nationwide",
+        "Members may advocate for their home state's interests within the committee",
+        "Committee hearings can highlight issues important to specific states or regions"
+      ]
+    };
+  }
+  
+  // Handle programs and policies
+  if (termLower.includes('program') || termLower.includes('policy') || termLower.includes('initiative')) {
+    return {
+      term: term,
+      briefRundown: `${term} represents a government approach to addressing specific social, economic, or policy challenges. Programs typically involve structured activities, funding, and administration to achieve particular goals, while policies establish principles and guidelines for government action.`,
+      components: [
+        "Objectives and goals - what the program or policy aims to accomplish",
+        "Target population - who is intended to benefit from the program",
+        "Funding sources - how the program is financed (federal, state, local, or private)",
+        "Implementation structure - which agencies or organizations carry out the program"
+      ],
+      proposedImpact: `${term} is designed to create positive outcomes for its intended beneficiaries while addressing broader policy objectives. The effectiveness and impact can vary based on funding levels, implementation quality, and changing circumstances.`,
+      inPracticeByStates: [
+        "Federal programs may be administered differently across states",
+        "Some states may supplement federal programs with additional resources",
+        "State-level variations can affect program accessibility and outcomes"
+      ]
+    };
+  }
+  
+  // Handle courts and judicial terms
+  if (termLower.includes('court') || termLower.includes('judicial') || termLower.includes('justice')) {
+    return {
+      term: term,
+      briefRundown: `${term} relates to the judicial branch of government, which interprets laws, resolves disputes, and ensures constitutional protections. The court system provides checks and balances on legislative and executive power while protecting individual rights.`,
+      components: [
+        "Judicial appointments - judges nominated by the President and confirmed by the Senate",
+        "Court jurisdiction - the types of cases and geographic areas the court covers",
+        "Legal procedures - rules and processes that govern how cases are handled",
+        "Precedent and case law - previous decisions that guide future rulings"
+      ],
+      proposedImpact: `${term} affects how laws are interpreted and applied, influencing everything from individual legal disputes to major constitutional questions. Court decisions can have lasting effects on society and government operations.`,
+      inPracticeByStates: [
+        "Federal court decisions apply nationwide and bind state courts on federal questions",
+        "State courts handle most civil and criminal cases under state law",
+        "Appeals courts review decisions from lower courts in their jurisdiction"
+      ]
+    };
+  }
+  
+  // Generic political term fallback
   return {
     term: term,
-    briefRundown: `${term} is an important political concept that plays a significant role in governance and policy-making. This term encompasses various aspects of political processes and institutional frameworks that shape how decisions are made and implemented in democratic societies.`,
-    proposedImpact: `${term} is designed to influence policy outcomes, institutional effectiveness, and democratic processes in ways that serve the public interest and maintain governmental accountability.`,
+    briefRundown: `${term} is a significant element in American politics and governance. Political terms often represent institutions, processes, policies, or concepts that shape how government operates and how citizens participate in democratic society. Understanding these terms helps citizens engage more effectively with political processes.`,
+    proposedImpact: `As part of the American political system, ${term} plays a role in how policies are developed, implemented, or debated. Political concepts and institutions are designed to serve democratic principles while balancing various interests and perspectives.`,
+    inPracticeByStates: [
+      "Political concepts and institutions operate within the federal system",
+      "States may have different approaches while operating under federal frameworks",
+      "Local implementation can vary based on state laws and resources"
+    ]
   };
 }
 
@@ -821,10 +895,17 @@ export async function getContextData(term: string): Promise<ContextData | null> 
   if (contextDatabase[canonicalTerm]) {
     return contextDatabase[canonicalTerm];
   }
-  // If not in static database, try AI. If AI fails, return null (no generic fallback)
-  const aiResult = await generateContextWithAI(canonicalTerm);
-  if (aiResult && aiResult.briefRundown && !aiResult.briefRundown.toLowerCase().includes('is a political term or entity')) {
-    return aiResult;
+  
+  // If not in static database, try AI context generation
+  try {
+    const aiResult = await generateContextWithAI(canonicalTerm);
+    if (aiResult && aiResult.briefRundown) {
+      return aiResult;
+    }
+  } catch (error) {
+    console.log('AI context generation failed, using enhanced fallback');
   }
-  return null;
+  
+  // Always provide a fallback - never return null
+  return await simulateAIResponse(canonicalTerm);
 }

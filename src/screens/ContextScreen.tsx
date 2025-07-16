@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { getContextData, ContextData } from '../utils/politicalTerms';
+import { useUserPreferences, getThemeColors, getFontScale } from '../hooks/useUserPreferences';
 
 const HIGHLIGHT = '#008080';
 const BLACK = '#111';
@@ -28,8 +29,13 @@ interface ContextScreenProps {
 
 export default function ContextScreen({ route, navigation }: ContextScreenProps) {
   const { term } = route.params;
+  const { preferences } = useUserPreferences();
   const [contextData, setContextData] = useState<ContextData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Get theme colors and font scale based on user preferences
+  const themeColors = getThemeColors(preferences.display.darkMode);
+  const fontScale = getFontScale(preferences.display.fontSize);
 
   // Determine if this term is a bill or policy that can be simulated
   const canSimulate = (term: string): boolean => {
