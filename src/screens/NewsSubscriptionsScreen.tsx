@@ -13,6 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { authService } from '../services/authService';
 import { NewsSubscription } from '../types/auth';
+import { useUserPreferences, getThemeColors, getFontScale } from '../hooks/useUserPreferences';
 
 const BLACK = '#111111';
 const GRAY = '#6B6B6B';
@@ -29,6 +30,10 @@ const NEWS_PROVIDERS = [
 
 export default function NewsSubscriptionsScreen() {
   const navigation = useNavigation();
+  const { preferences } = useUserPreferences();
+  const themeColors = getThemeColors(preferences.display.darkMode);
+  const fontScale = getFontScale(preferences.display.fontSize);
+  
   const [subscriptions, setSubscriptions] = useState<NewsSubscription[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
@@ -119,12 +124,12 @@ export default function NewsSubscriptionsScreen() {
   };
 
   const renderSubscriptionItem = (subscription: NewsSubscription) => (
-    <View key={subscription.id} style={styles.subscriptionItem}>
+    <View key={subscription.id} style={dynamicStyles.subscriptionItem}>
       <View style={styles.subscriptionInfo}>
-        <Text style={styles.subscriptionName}>
+        <Text style={dynamicStyles.subscriptionName}>
           {getProviderName(subscription.provider)}
         </Text>
-        <Text style={styles.subscriptionDate}>
+        <Text style={dynamicStyles.subscriptionDate}>
           Added {subscription.addedAt.toLocaleDateString()}
         </Text>
         <View style={styles.subscriptionStatus}>
@@ -132,7 +137,7 @@ export default function NewsSubscriptionsScreen() {
             styles.statusDot,
             { backgroundColor: subscription.isActive ? '#22c55e' : '#ef4444' }
           ]} />
-          <Text style={styles.statusText}>
+          <Text style={dynamicStyles.statusText}>
             {subscription.isActive ? 'Active' : 'Inactive'}
           </Text>
         </View>
@@ -154,28 +159,28 @@ export default function NewsSubscriptionsScreen() {
       onRequestClose={() => setShowAddModal(false)}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Add News Subscription</Text>
+        <View style={dynamicStyles.modalContainer}>
+          <Text style={dynamicStyles.modalTitle}>Add News Subscription</Text>
           
-          <Text style={styles.fieldLabel}>Select News Provider</Text>
+          <Text style={dynamicStyles.fieldLabel}>Select News Provider</Text>
           <ScrollView style={styles.providerList} showsVerticalScrollIndicator={false}>
             {NEWS_PROVIDERS.map(provider => (
               <TouchableOpacity
                 key={provider.id}
                 style={[
-                  styles.providerItem,
+                  dynamicStyles.providerItem,
                   selectedProvider === provider.id && styles.selectedProvider
                 ]}
                 onPress={() => setSelectedProvider(provider.id)}
               >
                 <Text style={[
-                  styles.providerName,
+                  dynamicStyles.providerName,
                   selectedProvider === provider.id && styles.selectedProviderText
                 ]}>
                   {provider.name}
                 </Text>
                 {provider.requiresAuth && (
-                  <Text style={styles.authRequired}>Requires Authentication</Text>
+                  <Text style={dynamicStyles.authRequired}>Requires Authentication</Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -183,10 +188,11 @@ export default function NewsSubscriptionsScreen() {
 
           {selectedProvider && NEWS_PROVIDERS.find(p => p.id === selectedProvider)?.requiresAuth && (
             <View style={styles.authFields}>
-              <Text style={styles.fieldLabel}>API Key or Username</Text>
+              <Text style={dynamicStyles.fieldLabel}>API Key or Username</Text>
               <TextInput
-                style={styles.textInput}
+                style={dynamicStyles.textInput}
                 placeholder="Enter API key or username"
+                placeholderTextColor={themeColors.secondaryText}
                 value={apiKey || username}
                 onChangeText={(text) => {
                   if (text.includes('key') || text.length > 20) {
@@ -199,7 +205,7 @@ export default function NewsSubscriptionsScreen() {
                 }}
                 secureTextEntry={true}
               />
-              <Text style={styles.helpText}>
+              <Text style={[styles.helpText, { color: themeColors.secondaryText }]}>
                 This will be used to access your subscription content
               </Text>
             </View>
@@ -232,14 +238,94 @@ export default function NewsSubscriptionsScreen() {
     </Modal>
   );
 
+  // Create dynamic styles based on theme
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      ...styles.container,
+      backgroundColor: themeColors.background,
+    },
+    title: {
+      ...styles.title,
+      color: themeColors.text,
+    },
+    subtitle: {
+      ...styles.subtitle,
+      color: themeColors.secondaryText,
+    },
+    backButtonText: {
+      ...styles.backButtonText,
+      color: '#000000', // Always black for better contrast
+    },
+    subscriptionName: {
+      ...styles.subscriptionName,
+      color: themeColors.text,
+    },
+    subscriptionProvider: {
+      ...styles.subscriptionProvider,
+      color: themeColors.secondaryText,
+    },
+    subscriptionDate: {
+      ...styles.subscriptionDate,
+      color: themeColors.secondaryText,
+    },
+    statusText: {
+      ...styles.statusText,
+      color: themeColors.secondaryText,
+    },
+    emptyTitle: {
+      ...styles.emptyTitle,
+      color: themeColors.text,
+    },
+    emptySubtitle: {
+      ...styles.emptySubtitle,
+      color: themeColors.secondaryText,
+    },
+    subscriptionItem: {
+      ...styles.subscriptionItem,
+      backgroundColor: themeColors.card,
+      borderColor: themeColors.border,
+    },
+    modalContainer: {
+      ...styles.modalContainer,
+      backgroundColor: themeColors.background,
+    },
+    modalTitle: {
+      ...styles.modalTitle,
+      color: themeColors.text,
+    },
+    fieldLabel: {
+      ...styles.fieldLabel,
+      color: themeColors.text,
+    },
+    providerName: {
+      ...styles.providerName,
+      color: themeColors.text,
+    },
+    authRequired: {
+      ...styles.authRequired,
+      color: themeColors.secondaryText,
+    },
+    textInput: {
+      ...styles.textInput,
+      color: themeColors.text,
+      backgroundColor: themeColors.card,
+      borderColor: themeColors.border,
+    },
+    providerItem: {
+      ...styles.providerItem,
+      backgroundColor: themeColors.card,
+      borderColor: themeColors.border,
+    },
+  });
+
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={dynamicStyles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>News Subscriptions</Text>
-        <Text style={styles.subtitle}>
+        <Text style={dynamicStyles.title}>News Subscriptions</Text>
+        <Text style={dynamicStyles.subtitle}>
           Connect your news subscriptions to see more personalized content
         </Text>
       </View>
@@ -247,8 +333,8 @@ export default function NewsSubscriptionsScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {subscriptions.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No subscriptions yet</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={dynamicStyles.emptyTitle}>No subscriptions yet</Text>
+            <Text style={dynamicStyles.emptySubtitle}>
               Add your news subscriptions to get articles from your favorite sources
             </Text>
           </View>

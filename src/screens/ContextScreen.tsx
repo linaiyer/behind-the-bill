@@ -72,6 +72,62 @@ export default function ContextScreen({ route, navigation }: ContextScreenProps)
     loadContextData();
   }, [term]);
 
+  // Create dynamic styles based on theme
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      ...styles.container,
+      backgroundColor: themeColors.background,
+    },
+    headerTitle: {
+      ...styles.headerTitle,
+      color: themeColors.text,
+    },
+    termTitle: {
+      ...styles.termTitle,
+      color: themeColors.text,
+    },
+    sectionTitle: {
+      ...styles.sectionTitle,
+      color: themeColors.text,
+    },
+    sectionText: {
+      ...styles.sectionText,
+      color: themeColors.text,
+    },
+    listItemText: {
+      ...styles.listItemText,
+      color: themeColors.text,
+    },
+    subSectionTitle: {
+      ...styles.subSectionTitle,
+      color: themeColors.text,
+    },
+    errorTitle: {
+      ...styles.errorTitle,
+      color: themeColors.text,
+    },
+    errorText: {
+      ...styles.errorText,
+      color: themeColors.secondaryText,
+    },
+    loadingText: {
+      ...styles.loadingText,
+      color: themeColors.secondaryText,
+    },
+    loadingSubtext: {
+      ...styles.loadingSubtext,
+      color: themeColors.secondaryText,
+    },
+    sectionContent: {
+      ...styles.sectionContent,
+      backgroundColor: themeColors.card,
+    },
+    header: {
+      ...styles.header,
+      borderBottomColor: themeColors.border,
+    },
+  });
+
   const renderSection = (title: string, content: string | string[] | undefined, icon: string) => {
     if (!content) return null;
 
@@ -79,18 +135,18 @@ export default function ContextScreen({ route, navigation }: ContextScreenProps)
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Ionicons name={icon as any} size={20} color={HIGHLIGHT} />
-          <Text style={styles.sectionTitle}>{title}</Text>
+          <Text style={dynamicStyles.sectionTitle}>{title}</Text>
         </View>
-        <View style={styles.sectionContent}>
+        <View style={dynamicStyles.sectionContent}>
           {Array.isArray(content) ? (
             content.map((item, index) => (
               <View key={index} style={styles.listItem}>
                 <Text style={styles.bulletPoint}>•</Text>
-                <Text style={styles.listItemText}>{item}</Text>
+                <Text style={dynamicStyles.listItemText}>{item}</Text>
               </View>
             ))
           ) : (
-            <Text style={styles.sectionText}>{content}</Text>
+            <Text style={dynamicStyles.sectionText}>{content}</Text>
           )}
         </View>
       </View>
@@ -104,27 +160,27 @@ export default function ContextScreen({ route, navigation }: ContextScreenProps)
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Ionicons name="git-compare-outline" size={20} color={HIGHLIGHT} />
-          <Text style={styles.sectionTitle}>Compare & Contrast</Text>
+          <Text style={dynamicStyles.sectionTitle}>Compare & Contrast</Text>
         </View>
-        <View style={styles.sectionContent}>
+        <View style={dynamicStyles.sectionContent}>
           {compareContrast.historicalUS && (
             <View style={styles.subSection}>
-              <Text style={styles.subSectionTitle}>Similar Programs in US History</Text>
+              <Text style={dynamicStyles.subSectionTitle}>Similar Programs in US History</Text>
               {compareContrast.historicalUS.map((item: string, index: number) => (
                 <View key={index} style={styles.listItem}>
                   <Text style={styles.bulletPoint}>•</Text>
-                  <Text style={styles.listItemText}>{item}</Text>
+                  <Text style={dynamicStyles.listItemText}>{item}</Text>
                 </View>
               ))}
             </View>
           )}
           {compareContrast.otherCountries && (
             <View style={styles.subSection}>
-              <Text style={styles.subSectionTitle}>Programs in Other Countries</Text>
+              <Text style={dynamicStyles.subSectionTitle}>Programs in Other Countries</Text>
               {compareContrast.otherCountries.map((item: string, index: number) => (
                 <View key={index} style={styles.listItem}>
                   <Text style={styles.bulletPoint}>•</Text>
-                  <Text style={styles.listItemText}>{item}</Text>
+                  <Text style={dynamicStyles.listItemText}>{item}</Text>
                 </View>
               ))}
             </View>
@@ -136,18 +192,18 @@ export default function ContextScreen({ route, navigation }: ContextScreenProps)
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
+      <View style={dynamicStyles.container}>
+        <View style={dynamicStyles.header}>
           <TouchableOpacity onPress={navigation.goBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={BLACK} />
+            <Ionicons name="arrow-back" size={24} color={themeColors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Context</Text>
+          <Text style={dynamicStyles.headerTitle}>Context</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={HIGHLIGHT} />
-          <Text style={styles.loadingText}>Generating comprehensive context...</Text>
-          <Text style={styles.loadingSubtext}>Using AI to provide detailed political analysis</Text>
+          <Text style={dynamicStyles.loadingText}>Generating comprehensive context...</Text>
+          <Text style={dynamicStyles.loadingSubtext}>Using AI to provide detailed political analysis</Text>
         </View>
       </View>
     );
@@ -155,18 +211,18 @@ export default function ContextScreen({ route, navigation }: ContextScreenProps)
 
   if (!contextData) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
+      <View style={dynamicStyles.container}>
+        <View style={dynamicStyles.header}>
           <TouchableOpacity onPress={navigation.goBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={BLACK} />
+            <Ionicons name="arrow-back" size={24} color={themeColors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Context</Text>
+          <Text style={dynamicStyles.headerTitle}>Context</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.errorContainer}>
-          <Ionicons name="information-circle-outline" size={48} color={GRAY} />
-          <Text style={styles.errorTitle}>Context Generation Failed</Text>
-          <Text style={styles.errorText}>
+          <Ionicons name="information-circle-outline" size={48} color={themeColors.secondaryText} />
+          <Text style={dynamicStyles.errorTitle}>Context Generation Failed</Text>
+          <Text style={dynamicStyles.errorText}>
             Unable to generate context information for "{term}". Please check your internet connection and try again. You can also configure an OpenAI API key in Settings for enhanced AI-powered explanations.
           </Text>
         </View>
@@ -175,19 +231,19 @@ export default function ContextScreen({ route, navigation }: ContextScreenProps)
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={dynamicStyles.container}>
+      <View style={dynamicStyles.header}>
         <TouchableOpacity onPress={navigation.goBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={BLACK} />
+          <Ionicons name="arrow-back" size={24} color={themeColors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Context</Text>
+        <Text style={dynamicStyles.headerTitle}>Context</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Term Title */}
         <View style={styles.termHeader}>
-          <Text style={styles.termTitle}>{contextData.term}</Text>
+          <Text style={dynamicStyles.termTitle}>{contextData.term}</Text>
           
           {/* Legislative Impact Simulator Button */}
           {canSimulate(term) && (

@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useUserPreferences, getThemeColors, getFontScale } from '../hooks/useUserPreferences';
 
 interface Message {
   id: string;
@@ -12,6 +13,10 @@ interface Message {
 }
 
 export default function ChatScreen({ navigation }: any) {
+  const { preferences } = useUserPreferences();
+  const themeColors = getThemeColors(preferences.display.darkMode);
+  const fontScale = getFontScale(preferences.display.fontSize);
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -75,43 +80,203 @@ export default function ChatScreen({ navigation }: any) {
     return responses[persona as keyof typeof responses] || responses.neutral;
   };
 
+  // Create dynamic styles based on theme
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    header: {
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      backgroundColor: themeColors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    headerTitle: {
+      fontSize: 20 * fontScale,
+      fontWeight: 'bold',
+      color: themeColors.text,
+      marginLeft: 16,
+    },
+    personaContainer: {
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      backgroundColor: themeColors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+    },
+    personaLabel: {
+      fontSize: 14 * fontScale,
+      fontWeight: '500',
+      color: themeColors.secondaryText,
+      marginBottom: 8,
+    },
+    personaRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    personaButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    personaButtonActive: {
+      backgroundColor: '#3B82F6',
+    },
+    personaButtonInactive: {
+      backgroundColor: themeColors.border,
+    },
+    personaText: {
+      marginLeft: 4,
+      fontSize: 14 * fontScale,
+      fontWeight: '500',
+    },
+    personaTextActive: {
+      color: '#ffffff',
+    },
+    personaTextInactive: {
+      color: themeColors.secondaryText,
+    },
+    messagesContainer: {
+      flex: 1,
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+    },
+    messageContainer: {
+      marginBottom: 16,
+    },
+    userMessage: {
+      alignSelf: 'flex-end',
+      backgroundColor: '#3B82F6',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 18,
+      maxWidth: '80%',
+    },
+    botMessage: {
+      alignSelf: 'flex-start',
+      backgroundColor: themeColors.card,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 18,
+      maxWidth: '80%',
+    },
+    messageText: {
+      fontSize: 16 * fontScale,
+      lineHeight: 22 * fontScale,
+    },
+    userMessageText: {
+      color: '#ffffff',
+    },
+    botMessageText: {
+      color: themeColors.text,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+      borderTopColor: themeColors.border,
+      backgroundColor: themeColors.card,
+    },
+    textInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16 * fontScale,
+      color: themeColors.text,
+      backgroundColor: themeColors.background,
+      marginRight: 12,
+    },
+    sendButton: {
+      backgroundColor: '#3B82F6',
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    sendButtonText: {
+      color: '#ffffff',
+      fontSize: 16 * fontScale,
+      fontWeight: '600',
+    },
+    suggestionContainer: {
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+    },
+    suggestionButton: {
+      backgroundColor: themeColors.card,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      marginBottom: 8,
+    },
+    suggestionText: {
+      fontSize: 14 * fontScale,
+      color: themeColors.text,
+    },
+  });
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView style={dynamicStyles.container}>
       {/* Header */}
-      <View className="px-6 py-4 bg-white border-b border-gray-200">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center">
+      <View style={dynamicStyles.header}>
+        <View style={dynamicStyles.headerRow}>
+          <View style={dynamicStyles.headerLeft}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color="#374151" />
+              <Ionicons name="arrow-back" size={24} color={themeColors.text} />
             </TouchableOpacity>
-            <Text className="text-xl font-bold text-gray-900 ml-4">Chat with AI</Text>
+            <Text style={dynamicStyles.headerTitle}>Chat with AI</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('ChatSettings')}>
-            <Ionicons name="settings" size={24} color="#374151" />
+            <Ionicons name="settings" size={24} color={themeColors.text} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Persona Selection */}
-      <View className="px-6 py-4 bg-white border-b border-gray-200">
-        <Text className="text-sm font-medium text-gray-700 mb-2">Chat Style:</Text>
-        <View className="flex-row gap-2">
+      <View style={dynamicStyles.personaContainer}>
+        <Text style={dynamicStyles.personaLabel}>Chat Style:</Text>
+        <View style={dynamicStyles.personaRow}>
           {personas.map((persona) => (
             <TouchableOpacity
               key={persona.id}
-              className={`px-3 py-2 rounded-full flex-row items-center ${
-                selectedPersona === persona.id ? 'bg-blue-500' : 'bg-gray-200'
-              }`}
+              style={[
+                dynamicStyles.personaButton,
+                selectedPersona === persona.id 
+                  ? dynamicStyles.personaButtonActive 
+                  : dynamicStyles.personaButtonInactive
+              ]}
               onPress={() => setSelectedPersona(persona.id)}
             >
               <Ionicons 
                 name={persona.icon as any} 
                 size={16} 
-                color={selectedPersona === persona.id ? 'white' : '#6B7280'} 
+                color={selectedPersona === persona.id ? 'white' : themeColors.secondaryText} 
               />
-              <Text className={`ml-1 text-sm font-medium ${
-                selectedPersona === persona.id ? 'text-white' : 'text-gray-700'
-              }`}>
+              <Text style={[
+                dynamicStyles.personaText,
+                selectedPersona === persona.id 
+                  ? dynamicStyles.personaTextActive 
+                  : dynamicStyles.personaTextInactive
+              ]}>
                 {persona.name}
               </Text>
             </TouchableOpacity>
@@ -122,32 +287,45 @@ export default function ChatScreen({ navigation }: any) {
       {/* Messages */}
       <ScrollView 
         ref={scrollViewRef}
-        className="flex-1 px-6 py-4"
+        style={dynamicStyles.messagesContainer}
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd()}
       >
         {messages.map((message) => (
           <View
             key={message.id}
-            className={`mb-4 ${message.sender === 'user' ? 'items-end' : 'items-start'}`}
+            style={[
+              dynamicStyles.messageContainer,
+              { alignItems: message.sender === 'user' ? 'flex-end' : 'flex-start' }
+            ]}
           >
             <View
-              className={`max-w-[80%] p-4 rounded-2xl ${
-                message.sender === 'user'
-                  ? 'bg-blue-500'
-                  : 'bg-white border border-gray-200'
-              }`}
+              style={[
+                message.sender === 'user' 
+                  ? dynamicStyles.userMessage 
+                  : dynamicStyles.botMessage
+              ]}
             >
               <Text
-                className={`${
-                  message.sender === 'user' ? 'text-white' : 'text-gray-900'
-                }`}
+                style={[
+                  dynamicStyles.messageText,
+                  message.sender === 'user' 
+                    ? dynamicStyles.userMessageText 
+                    : dynamicStyles.botMessageText
+                ]}
               >
                 {message.text}
               </Text>
               <Text
-                className={`text-xs mt-2 ${
-                  message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
-                }`}
+                style={[
+                  {
+                    fontSize: 12 * fontScale,
+                    marginTop: 8,
+                    opacity: 0.7,
+                  },
+                  message.sender === 'user' 
+                    ? { color: 'rgba(255, 255, 255, 0.7)' } 
+                    : { color: themeColors.secondaryText }
+                ]}
               >
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Text>
@@ -157,17 +335,17 @@ export default function ChatScreen({ navigation }: any) {
       </ScrollView>
 
       {/* Quick Questions */}
-      <View className="px-6 py-4 bg-white border-t border-gray-200">
-        <Text className="text-sm font-medium text-gray-700 mb-2">Quick Questions:</Text>
+      <View style={dynamicStyles.suggestionContainer}>
+        <Text style={dynamicStyles.personaLabel}>Quick Questions:</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className="flex-row gap-2">
+          <View style={dynamicStyles.personaRow}>
             {sampleQuestions.map((question, index) => (
               <TouchableOpacity
                 key={index}
-                className="bg-gray-100 px-3 py-2 rounded-full"
+                style={dynamicStyles.suggestionButton}
                 onPress={() => setInputText(question)}
               >
-                <Text className="text-sm text-gray-700">{question}</Text>
+                <Text style={dynamicStyles.suggestionText}>{question}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -177,27 +355,28 @@ export default function ChatScreen({ navigation }: any) {
       {/* Input */}
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="bg-white border-t border-gray-200"
       >
-        <View className="flex-row items-center px-6 py-4">
+        <View style={dynamicStyles.inputContainer}>
           <TextInput
-            className="flex-1 border border-gray-300 rounded-full px-4 py-3 mr-3"
+            style={dynamicStyles.textInput}
             placeholder="Ask about any bill or policy..."
+            placeholderTextColor={themeColors.secondaryText}
             value={inputText}
             onChangeText={setInputText}
             multiline
           />
           <TouchableOpacity
-            className={`w-10 h-10 rounded-full items-center justify-center ${
-              inputText.trim() ? 'bg-blue-500' : 'bg-gray-300'
-            }`}
+            style={[
+              dynamicStyles.sendButton,
+              { backgroundColor: inputText.trim() ? '#3B82F6' : themeColors.border }
+            ]}
             onPress={sendMessage}
             disabled={!inputText.trim()}
           >
             <Ionicons 
               name="send" 
               size={20} 
-              color={inputText.trim() ? 'white' : '#9CA3AF'} 
+              color={inputText.trim() ? 'white' : themeColors.secondaryText} 
             />
           </TouchableOpacity>
         </View>

@@ -51,7 +51,7 @@ Data Usage:
 
 Your data is never sold or shared with third parties except as required to provide core app functionality (e.g., news APIs).
 
-Contact us at privacy@behindthebill.app for questions.`;
+Contact us at lina@codefornonprofit.org for questions.`;
 }
 
 export function getSupportText() {
@@ -65,7 +65,7 @@ Common Issues:
 • Context not generating: Ensure you have a valid OpenAI API key or use local fallback
 
 Contact Options:
-• Email: support@behindthebill.app
+• Email: lina@codefornonprofit.org
 • In-app feedback: Use the feedback option in Settings
 
 For technical issues:

@@ -5,15 +5,24 @@ import { detectSpecificPoliticalTerms, HighlightedTerm } from '../utils/politica
 interface HighlightedTextProps {
   text: string;
   onTermPress?: (term: string, category: string) => void;
+  textColor?: string;
+  backgroundColor?: string;
+  highlightColor?: string;
 }
 
-export const HighlightedText: React.FC<HighlightedTextProps> = ({ text, onTermPress }) => {
+export const HighlightedText: React.FC<HighlightedTextProps> = ({ 
+  text, 
+  onTermPress, 
+  textColor = '#111111',
+  backgroundColor = '#ffffff',
+  highlightColor = '#008080'
+}) => {
   const [highlightedTerms, setHighlightedTerms] = useState<HighlightedTerm[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Handle undefined or null text
   if (!text || typeof text !== 'string') {
-    return <Text style={{ color: '#111111', fontSize: 16, fontFamily: 'WorkSans_400Regular', lineHeight: 26 }}></Text>;
+    return <Text style={{ color: textColor, fontSize: 16, fontFamily: 'WorkSans_400Regular', lineHeight: 26 }}></Text>;
   }
 
   useEffect(() => {
@@ -37,12 +46,13 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({ text, onTermPr
         alignItems: 'center',
         paddingVertical: 8
       }}>
-        <ActivityIndicator size="small" color="#008080" style={{ marginRight: 8 }} />
+        <ActivityIndicator size="small" color={highlightColor} style={{ marginRight: 8 }} />
         <Text style={{ 
-          color: '#6B6B6B', 
+          color: textColor, 
           fontSize: 14, 
           fontFamily: 'WorkSans_400Regular',
-          fontStyle: 'italic'
+          fontStyle: 'italic',
+          opacity: 0.7
         }}>
           Analyzing political terms...
         </Text>
@@ -54,7 +64,7 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({ text, onTermPr
   if (highlightedTerms.length === 0) {
     return (
       <Text style={{ 
-        color: '#111111', 
+        color: textColor, 
         fontSize: 16, 
         fontFamily: 'WorkSans_400Regular', 
         lineHeight: 26,
@@ -85,9 +95,9 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({ text, onTermPr
         onPress={() => onTermPress?.(term.term, term.category)}
         style={{
           textDecorationLine: 'underline',
-          textDecorationColor: '#008080',
+          textDecorationColor: highlightColor,
           textDecorationStyle: 'solid',
-          backgroundColor: 'rgba(0, 128, 128, 0.1)',
+          backgroundColor: `${highlightColor}20`, // 20% opacity
         }}
       >
         {term.fullPhrase}
@@ -108,7 +118,7 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({ text, onTermPr
 
   return (
     <Text style={{ 
-      color: '#111111', 
+      color: textColor, 
       fontSize: 16, 
       fontFamily: 'WorkSans_400Regular', 
       lineHeight: 26,

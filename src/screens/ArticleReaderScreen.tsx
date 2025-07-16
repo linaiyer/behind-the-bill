@@ -178,6 +178,9 @@ export default function ArticleReaderScreen({ route, navigation }: ArticleReader
                     <HighlightedText 
                       text={cleanNewsText(paragraph)} 
                       onTermPress={(term) => navigation.navigate('Context', { term })}
+                      textColor={themeColors.text}
+                      backgroundColor={themeColors.background}
+                      highlightColor={themeColors.primary}
                     />
                   </View>
                 );
@@ -197,6 +200,9 @@ export default function ArticleReaderScreen({ route, navigation }: ArticleReader
                     <HighlightedText 
                       text={cleanNewsText(paragraph)} 
                       onTermPress={(term) => navigation.navigate('Context', { term })}
+                      textColor={themeColors.text}
+                      backgroundColor={themeColors.background}
+                      highlightColor={themeColors.primary}
                     />
                   </View>
                 );

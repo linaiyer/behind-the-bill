@@ -96,7 +96,10 @@ export default function PreferencesScreen({ navigation }: PreferencesScreenProps
     return (
       <TouchableOpacity
         key={interest}
-        style={[styles.interestItem, isSelected && styles.interestItemSelected]}
+        style={[
+          dynamicStyles.interestItem, 
+          isSelected && styles.interestItemSelected
+        ]}
         onPress={() => toggleInterest(interest)}
       >
         <Text style={[dynamicStyles.interestText, isSelected && styles.interestTextSelected]}>
@@ -168,6 +171,20 @@ export default function PreferencesScreen({ navigation }: PreferencesScreenProps
       ...styles.interestText,
       color: themeColors.text,
       fontSize: 14 * fontScale,
+    },
+    interestItem: {
+      ...styles.interestItem,
+      backgroundColor: themeColors.background,
+      borderColor: themeColors.border,
+    },
+    fontSizeOption: {
+      ...styles.fontSizeOption,
+      backgroundColor: themeColors.background,
+      borderColor: themeColors.border,
+    },
+    fontSizeOptionText: {
+      ...styles.fontSizeOptionText,
+      color: themeColors.text,
     },
     loadingText: {
       ...styles.loadingText,
@@ -258,13 +275,13 @@ export default function PreferencesScreen({ navigation }: PreferencesScreenProps
                   <TouchableOpacity
                     key={size}
                     style={[
-                      styles.fontSizeOption,
+                      dynamicStyles.fontSizeOption,
                       preferences.display.fontSize === size && styles.fontSizeOptionSelected
                     ]}
                     onPress={() => updateDisplaySetting('fontSize', size)}
                   >
                     <Text style={[
-                      styles.fontSizeOptionText,
+                      dynamicStyles.fontSizeOptionText,
                       preferences.display.fontSize === size && styles.fontSizeOptionTextSelected
                     ]}>
                       {size.charAt(0).toUpperCase() + size.slice(1)}
