@@ -3,11 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface UserPreferences {
   interests: string[];
-  notifications: {
-    breaking: boolean;
-    daily: boolean;
-    weekly: boolean;
-  };
   privacy: {
     analytics: boolean;
     personalization: boolean;
@@ -20,11 +15,6 @@ export interface UserPreferences {
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   interests: [],
-  notifications: {
-    breaking: true,
-    daily: false,
-    weekly: true
-  },
   privacy: {
     analytics: true,
     personalization: true

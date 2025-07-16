@@ -140,7 +140,8 @@ export default function ContextScreen({ route, navigation }: ContextScreenProps)
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={HIGHLIGHT} />
-          <Text style={styles.loadingText}>Loading context information...</Text>
+          <Text style={styles.loadingText}>Generating comprehensive context...</Text>
+          <Text style={styles.loadingSubtext}>Using AI to provide detailed political analysis</Text>
         </View>
       </View>
     );
@@ -158,9 +159,9 @@ export default function ContextScreen({ route, navigation }: ContextScreenProps)
         </View>
         <View style={styles.errorContainer}>
           <Ionicons name="information-circle-outline" size={48} color={GRAY} />
-          <Text style={styles.errorTitle}>No Context Available</Text>
+          <Text style={styles.errorTitle}>Context Generation Failed</Text>
           <Text style={styles.errorText}>
-            We don't have detailed context information for "{term}" yet. This feature is being expanded regularly.
+            Unable to generate context information for "{term}". Please check your internet connection and try again. You can also configure an OpenAI API key in Settings for enhanced AI-powered explanations.
           </Text>
         </View>
       </View>
@@ -273,6 +274,13 @@ const styles = StyleSheet.create({
     fontFamily: 'WorkSans_400Regular',
     color: GRAY,
     marginTop: 12,
+  },
+  loadingSubtext: {
+    fontSize: 14,
+    fontFamily: 'WorkSans_400Regular',
+    color: GRAY,
+    marginTop: 4,
+    opacity: 0.7,
   },
   errorContainer: {
     flex: 1,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Text, TouchableOpacity } from 'react-native';
-import { extractPoliticalEntitiesWithAI, ExtractedEntity } from '../utils/aiEntityExtraction';
+import { Text, TouchableOpacity, ActivityIndicator, View } from 'react-native';
+import { detectSpecificPoliticalTerms, HighlightedTerm } from '../utils/politicalTerms';
 
 interface HighlightedTextProps {
   text: string;
@@ -8,7 +8,7 @@ interface HighlightedTextProps {
 }
 
 export const HighlightedText: React.FC<HighlightedTextProps> = ({ text, onTermPress }) => {
-  const [detectedEntities, setDetectedEntities] = useState<ExtractedEntity[]>([]);
+  const [highlightedTerms, setHighlightedTerms] = useState<HighlightedTerm[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Handle undefined or null text
@@ -17,24 +17,41 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({ text, onTermPr
   }
 
   useEffect(() => {
-    const detectEntities = async () => {
-      setIsLoading(true);
-      try {
-        const entities = await extractPoliticalEntitiesWithAI(text);
-        setDetectedEntities(entities);
-      } catch (error) {
-        console.error('Error detecting political entities:', error);
-        setDetectedEntities([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    detectEntities();
+    setIsLoading(true);
+    try {
+      const terms = detectSpecificPoliticalTerms(text);
+      setHighlightedTerms(terms);
+    } catch (err) {
+      console.error('Failed to analyze text:', err);
+      setHighlightedTerms([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [text]);
 
-  // Show loading or plain text while detecting
-  if (isLoading || detectedEntities.length === 0) {
+  // Show loading state
+  if (isLoading) {
+    return (
+      <View style={{ 
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8
+      }}>
+        <ActivityIndicator size="small" color="#008080" style={{ marginRight: 8 }} />
+        <Text style={{ 
+          color: '#6B6B6B', 
+          fontSize: 14, 
+          fontFamily: 'WorkSans_400Regular',
+          fontStyle: 'italic'
+        }}>
+          Analyzing political terms...
+        </Text>
+      </View>
+    );
+  }
+
+  // Show plain text if no terms detected or error occurred
+  if (highlightedTerms.length === 0) {
     return (
       <Text style={{ 
         color: '#111111', 
@@ -51,39 +68,33 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({ text, onTermPr
   const elements = [];
   let lastIndex = 0;
 
-  detectedEntities.forEach((entity, index) => {
-    // Add text before the entity
-    if (entity.startIndex > lastIndex) {
+  highlightedTerms.forEach((term, index) => {
+    // Add text before the term
+    if (term.startIndex > lastIndex) {
       elements.push(
         <Text key={`text-${index}`}>
-          {text.substring(lastIndex, entity.startIndex)}
+          {text.substring(lastIndex, term.startIndex)}
         </Text>
       );
     }
 
-    // Add the highlighted entity (full phrase, but pass specific name to context)
-    const displayName = entity.specificName || entity.term;
+    // Add the highlighted term with relevance-based styling
     elements.push(
-      <TouchableOpacity
-        key={`entity-${index}`}
-        onPress={() => onTermPress?.(displayName, entity.category)}
-        style={{ backgroundColor: 'transparent' }}
+      <Text
+        key={`term-${index}`}
+        onPress={() => onTermPress?.(term.term, term.category)}
+        style={{
+          textDecorationLine: 'underline',
+          textDecorationColor: '#008080',
+          textDecorationStyle: 'solid',
+          backgroundColor: 'rgba(0, 128, 128, 0.1)',
+        }}
       >
-        <Text
-          style={{
-            color: '#111111',
-            textDecorationLine: 'underline',
-            textDecorationColor: '#008080',
-            textDecorationStyle: 'solid',
-            fontWeight: '500',
-          }}
-        >
-          {entity.fullPhrase}
-        </Text>
-      </TouchableOpacity>
+        {term.fullPhrase}
+      </Text>
     );
 
-    lastIndex = entity.endIndex;
+    lastIndex = term.endIndex;
   });
 
   // Add remaining text

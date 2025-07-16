@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useUserPreferences, UserPreferences } from '../hooks/useUserPreferences';
+import { useUserPreferences, UserPreferences, getThemeColors, getFontScale } from '../hooks/useUserPreferences';
 
 const THEME_COLOR = '#008080';
 const BLACK = '#111111';
@@ -45,6 +45,10 @@ const POLITICAL_INTERESTS = [
 export default function PreferencesScreen({ navigation }: PreferencesScreenProps) {
   const { preferences, loading, updatePreferences } = useUserPreferences();
 
+  // Get theme colors and font scale based on user preferences
+  const themeColors = getThemeColors(preferences.display.darkMode);
+  const fontScale = getFontScale(preferences.display.fontSize);
+
   const toggleInterest = async (interest: string) => {
     const newInterests = preferences.interests.includes(interest)
       ? preferences.interests.filter(i => i !== interest)
@@ -59,18 +63,6 @@ export default function PreferencesScreen({ navigation }: PreferencesScreenProps
     }
   };
 
-  const updateNotificationSetting = async (setting: keyof UserPreferences['notifications'], value: boolean) => {
-    const success = await updatePreferences({
-      notifications: {
-        ...preferences.notifications,
-        [setting]: value
-      }
-    });
-    
-    if (!success) {
-      Alert.alert('Error', 'Failed to update notification settings. Please try again.');
-    }
-  };
 
   const updatePrivacySetting = async (setting: keyof UserPreferences['privacy'], value: boolean) => {
     const success = await updatePreferences({
@@ -107,7 +99,7 @@ export default function PreferencesScreen({ navigation }: PreferencesScreenProps
         style={[styles.interestItem, isSelected && styles.interestItemSelected]}
         onPress={() => toggleInterest(interest)}
       >
-        <Text style={[styles.interestText, isSelected && styles.interestTextSelected]}>
+        <Text style={[dynamicStyles.interestText, isSelected && styles.interestTextSelected]}>
           {interest}
         </Text>
         {isSelected && (
@@ -129,8 +121,8 @@ export default function PreferencesScreen({ navigation }: PreferencesScreenProps
         {icon && <Ionicons name={icon as any} size={20} color={THEME_COLOR} />}
       </View>
       <View style={styles.settingContent}>
-        <Text style={styles.settingTitle}>{title}</Text>
-        <Text style={styles.settingDescription}>{description}</Text>
+        <Text style={dynamicStyles.settingTitle}>{title}</Text>
+        <Text style={dynamicStyles.settingDescription}>{description}</Text>
       </View>
       <Switch
         value={value}
@@ -141,38 +133,81 @@ export default function PreferencesScreen({ navigation }: PreferencesScreenProps
     </View>
   );
 
+  // Create dynamic styles based on theme
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      ...styles.container,
+      backgroundColor: themeColors.background,
+    },
+    headerTitle: {
+      ...styles.headerTitle,
+      color: themeColors.text,
+      fontSize: 18 * fontScale,
+    },
+    sectionTitle: {
+      ...styles.sectionTitle,
+      color: themeColors.text,
+      fontSize: 20 * fontScale,
+    },
+    sectionDescription: {
+      ...styles.sectionDescription,
+      color: themeColors.secondaryText,
+      fontSize: 14 * fontScale,
+    },
+    settingTitle: {
+      ...styles.settingTitle,
+      color: themeColors.text,
+      fontSize: 16 * fontScale,
+    },
+    settingDescription: {
+      ...styles.settingDescription,
+      color: themeColors.secondaryText,
+      fontSize: 14 * fontScale,
+    },
+    interestText: {
+      ...styles.interestText,
+      color: themeColors.text,
+      fontSize: 14 * fontScale,
+    },
+    loadingText: {
+      ...styles.loadingText,
+      color: themeColors.secondaryText,
+      fontSize: 16 * fontScale,
+    },
+  });
+
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={dynamicStyles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={navigation.goBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={BLACK} />
+            <Ionicons name="arrow-back" size={24} color={themeColors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Preferences</Text>
+          <Text style={dynamicStyles.headerTitle}>Preferences</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading preferences...</Text>
+          <Text style={dynamicStyles.loadingText}>Loading preferences...</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={navigation.goBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={BLACK} />
+          <Ionicons name="arrow-back" size={24} color={themeColors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Preferences</Text>
+        <Text style={dynamicStyles.headerTitle}>Preferences</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Interests Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Political Interests</Text>
-          <Text style={styles.sectionDescription}>
+          <Text style={dynamicStyles.sectionTitle}>Political Interests</Text>
+          <Text style={dynamicStyles.sectionDescription}>
             Select topics you're interested in to personalize your news feed
           </Text>
           <View style={styles.interestsGrid}>
@@ -180,35 +215,10 @@ export default function PreferencesScreen({ navigation }: PreferencesScreenProps
           </View>
         </View>
 
-        {/* Notifications Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notifications</Text>
-          {renderSwitchSetting(
-            'Breaking News',
-            'Get notified about important political developments',
-            preferences.notifications.breaking,
-            (value) => updateNotificationSetting('breaking', value),
-            'notifications-outline'
-          )}
-          {renderSwitchSetting(
-            'Daily Summary',
-            'Receive a daily summary of political news',
-            preferences.notifications.daily,
-            (value) => updateNotificationSetting('daily', value),
-            'today-outline'
-          )}
-          {renderSwitchSetting(
-            'Weekly Digest',
-            'Get a weekly roundup of major political stories',
-            preferences.notifications.weekly,
-            (value) => updateNotificationSetting('weekly', value),
-            'library-outline'
-          )}
-        </View>
 
         {/* Privacy Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Privacy</Text>
+          <Text style={dynamicStyles.sectionTitle}>Privacy</Text>
           {renderSwitchSetting(
             'Usage Analytics',
             'Help improve the app by sharing anonymous usage data',
@@ -227,7 +237,7 @@ export default function PreferencesScreen({ navigation }: PreferencesScreenProps
 
         {/* Display Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Display</Text>
+          <Text style={dynamicStyles.sectionTitle}>Display</Text>
           {renderSwitchSetting(
             'Dark Mode',
             'Use dark theme for better reading in low light',
@@ -241,8 +251,8 @@ export default function PreferencesScreen({ navigation }: PreferencesScreenProps
               <Ionicons name="text-outline" size={20} color={THEME_COLOR} />
             </View>
             <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>Font Size</Text>
-              <Text style={styles.settingDescription}>Adjust text size for better readability</Text>
+              <Text style={dynamicStyles.settingTitle}>Font Size</Text>
+              <Text style={dynamicStyles.settingDescription}>Adjust text size for better readability</Text>
               <View style={styles.fontSizeOptions}>
                 {(['small', 'medium', 'large'] as const).map((size) => (
                   <TouchableOpacity

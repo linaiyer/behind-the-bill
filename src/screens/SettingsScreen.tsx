@@ -9,16 +9,30 @@ import {
   Image,
   ActivityIndicator
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { authService } from '../services/authService';
 import { User } from '../types/auth';
+import AIConfigModal from '../components/AIConfigModal';
+import { getAboutText, getPrivacyPolicyText, getSupportText } from '../utils/appInfo';
+
+type RootStackParamList = {
+  Settings: undefined;
+  Preferences: undefined;
+  NewsSubscriptions: undefined;
+};
+
+type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const BLACK = '#111111';
 const GRAY = '#6B6B6B';
 const THEME_COLOR = '#008080';
 
 export default function SettingsScreen() {
+  const navigation = useNavigation<SettingsScreenNavigationProp>();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAIConfig, setShowAIConfig] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -66,15 +80,19 @@ export default function SettingsScreen() {
 
   const handleNewsSubscriptions = () => {
     if (user) {
-      // Navigate to news subscriptions screen
-      Alert.alert('News Subscriptions', 'Feature coming soon!');
+      navigation.navigate('NewsSubscriptions');
     }
   };
 
   const handlePreferences = () => {
     if (user) {
-      // Navigate to preferences screen
-      Alert.alert('Preferences', 'Feature coming soon!');
+      navigation.navigate('Preferences');
+    }
+  };
+
+  const handleAIConfig = () => {
+    if (user) {
+      setShowAIConfig(true);
     }
   };
 
@@ -123,7 +141,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.settingsSection}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={styles.sectionTitle}>Personalization</Text>
           
           <TouchableOpacity
             style={styles.settingItem}
@@ -149,9 +167,77 @@ export default function SettingsScreen() {
               <Text style={styles.settingEmoji}>⚙️</Text>
             </View>
             <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>Preferences</Text>
+              <Text style={styles.settingTitle}>Interests & Preferences</Text>
               <Text style={styles.settingDescription}>
-                Customize your interests and notification settings
+                Set your political interests, notifications, and display preferences
+              </Text>
+            </View>
+            <Text style={styles.settingArrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={handleAIConfig}
+          >
+            <View style={styles.settingIcon}>
+              <Text style={styles.settingEmoji}>🤖</Text>
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>AI Highlighting</Text>
+              <Text style={styles.settingDescription}>
+                Configure AI-powered political term highlighting
+              </Text>
+            </View>
+            <Text style={styles.settingArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.settingsSection}>
+          <Text style={styles.sectionTitle}>App Information</Text>
+          
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => Alert.alert('About', getAboutText())}
+          >
+            <View style={styles.settingIcon}>
+              <Text style={styles.settingEmoji}>ℹ️</Text>
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>About</Text>
+              <Text style={styles.settingDescription}>
+                Version information and app details
+              </Text>
+            </View>
+            <Text style={styles.settingArrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => Alert.alert('Privacy Policy', getPrivacyPolicyText())}
+          >
+            <View style={styles.settingIcon}>
+              <Text style={styles.settingEmoji}>🔒</Text>
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>Privacy Policy</Text>
+              <Text style={styles.settingDescription}>
+                How we handle your data and privacy
+              </Text>
+            </View>
+            <Text style={styles.settingArrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => Alert.alert('Help & Support', getSupportText())}
+          >
+            <View style={styles.settingIcon}>
+              <Text style={styles.settingEmoji}>❓</Text>
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>Help & Support</Text>
+              <Text style={styles.settingDescription}>
+                Get help, report issues, or ask questions
               </Text>
             </View>
             <Text style={styles.settingArrow}>›</Text>
@@ -166,6 +252,11 @@ export default function SettingsScreen() {
             <Text style={styles.signOutButtonText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
+
+        <AIConfigModal
+          visible={showAIConfig}
+          onClose={() => setShowAIConfig(false)}
+        />
       </ScrollView>
     </View>
   );

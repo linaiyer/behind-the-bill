@@ -266,12 +266,13 @@ async function simulateAIPoliticalDetection(text: string): Promise<Array<{term: 
 // Function to generate context data using AI
 async function generateContextWithAI(term: string): Promise<ContextData | null> {
   try {
-    // In a real implementation, you would call an AI API here
-    // For now, we'll simulate the response based on the term
-    return await simulateAIResponse(term);
+    // Use the new AI context service for comprehensive context generation
+    const { generateAIContext } = await import('./aiContextService');
+    return await generateAIContext(term);
   } catch (error) {
     console.error('Failed to generate AI context:', error);
-    return null;
+    // Fallback to simulation if AI service fails
+    return await simulateAIResponse(term);
   }
 }
 
@@ -322,8 +323,201 @@ async function simulateAIResponse(term: string): Promise<ContextData | null> {
   };
 }
 
+// New highlighting algorithm based on specific searchable policy/political terms
+export interface HighlightedTerm {
+  term: string;
+  fullPhrase: string;
+  startIndex: number;
+  endIndex: number;
+  category: string;
+}
+
+export function detectSpecificPoliticalTerms(text: string): HighlightedTerm[] {
+  const detectedTerms: HighlightedTerm[] = [];
+  
+  // 1. BILL IDENTIFIERS
+  const billIdentifierPatterns = [
+    {
+      regex: /\b(?:H\.?\s?R\.?|S\.?B\.?|S\.?|AB|HB|SB)\s?\d{1,5}\b/gi,
+      category: 'bill_identifier'
+    },
+    {
+      regex: /\b(?:EU|UK|US)\s+(?:Regulation|Directive)\s+\d{4}\/\d+\b/gi,
+      category: 'bill_identifier'
+    }
+  ];
+  
+  // 2. FORMAL LEGISLATION NAMES (capitalized phrases ending in Act|Bill|Law|Code|Reform|Regulation|Directive)
+  const formalLegislationPattern = {
+    regex: /\b([A-Z][A-Za-z]*(?:\s+[A-Z][A-Za-z]*)*\s+(?:Act|Bill|Law|Code|Reform|Regulation|Directive))\b/g,
+    category: 'formal_legislation'
+  };
+  
+  // 3. GOVERNMENT AGENCIES / PROGRAMS / THINK-TANKS
+  const agencyProgramPatterns = [
+    {
+      regex: /\b(?:Department\s+of\s+[A-Z][A-Za-z]*(?:\s+[A-Z][A-Za-z]*)+)/g,
+      category: 'government_agency'
+    },
+    {
+      regex: /\b[A-Z][A-Za-z]*(?:\s+[A-Z][A-Za-z]*)*\s+(?:Department|Agency|Administration|Office|Commission|Service|Bureau|Foundation|Institute|Center|Program)\b/g,
+      category: 'government_agency'
+    }
+  ];
+  
+  // 4. MAJOR ENTITLEMENT / POLICY PROGRAMS & ACRONYMS (exact list, case-insensitive)
+  const entitlementPrograms = [
+    'Medicaid', 'Medicare', 'CHIP', 'Social Security', 'SNAP', 
+    'Supplemental Nutrition Assistance Program', 'TANF', 'WIC',
+    'Affordable Care Act', 'ACA', 'PEPFAR', 'FEMA'
+  ];
+  
+  // 5. POLITICAL INSTITUTIONS & COMMITTEES
+  const institutionPatterns = [
+    {
+      // Legislative bodies & branches
+      regex: /\b(?:U\.?S\.?\s+)?(?:Senate|House(?:\s+of\s+Representatives)?|Congress|Legislature|legislative\s+branch)\b/gi,
+      category: 'political_institution'
+    },
+    {
+      // Committees (capitalized phrase ending in Committee)
+      regex: /\b[A-Z][A-Za-z]*(?:\s+[A-Z][A-Za-z]*)*\s+Committee\b/g,
+      category: 'political_institution'
+    },
+    {
+      // Party names & abbreviations
+      regex: /\b(?:Republican\s+Party|Democratic\s+Party|Republicans?|Democrats?|G\.?O\.?P\.?)\b/gi,
+      category: 'political_institution'
+    }
+  ];
+  
+  // 6. SPECIAL POLICY PHRASES (case-insensitive)
+  const specialPolicyPhrases = [
+    'rescissions bill',
+    'continuing resolution', 
+    'omnibus spending package'
+  ];
+  
+  // Helper function to add terms while avoiding overlaps
+  function addTermIfNoOverlap(newTerm: HighlightedTerm) {
+    const hasOverlap = detectedTerms.some(existing => 
+      (newTerm.startIndex < existing.endIndex && newTerm.endIndex > existing.startIndex)
+    );
+    
+    if (!hasOverlap) {
+      detectedTerms.push(newTerm);
+    }
+  }
+  
+  // Process all patterns
+  
+  // 1. Bill identifiers
+  billIdentifierPatterns.forEach(pattern => {
+    let match;
+    while ((match = pattern.regex.exec(text)) !== null) {
+      addTermIfNoOverlap({
+        term: match[0].trim(),
+        fullPhrase: match[0].trim(),
+        startIndex: match.index,
+        endIndex: match.index + match[0].length,
+        category: pattern.category
+      });
+    }
+  });
+  
+  // 2. Formal legislation names
+  let match;
+  while ((match = formalLegislationPattern.regex.exec(text)) !== null) {
+    addTermIfNoOverlap({
+      term: match[1].trim(),
+      fullPhrase: match[1].trim(),
+      startIndex: match.index,
+      endIndex: match.index + match[0].length,
+      category: formalLegislationPattern.category
+    });
+  }
+  
+  // 3. Government agencies/programs/think-tanks
+  agencyProgramPatterns.forEach(pattern => {
+    let match;
+    while ((match = pattern.regex.exec(text)) !== null) {
+      addTermIfNoOverlap({
+        term: match[0].trim(),
+        fullPhrase: match[0].trim(),
+        startIndex: match.index,
+        endIndex: match.index + match[0].length,
+        category: pattern.category
+      });
+    }
+  });
+  
+  // 4. Entitlement programs (exact matches, case-insensitive)
+  entitlementPrograms.forEach(program => {
+    const regex = new RegExp(`\\b${program.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      addTermIfNoOverlap({
+        term: program,
+        fullPhrase: match[0],
+        startIndex: match.index,
+        endIndex: match.index + match[0].length,
+        category: 'entitlement_program'
+      });
+    }
+  });
+  
+  // 5. Political institutions
+  institutionPatterns.forEach(pattern => {
+    let match;
+    while ((match = pattern.regex.exec(text)) !== null) {
+      addTermIfNoOverlap({
+        term: match[0].trim(),
+        fullPhrase: match[0].trim(),
+        startIndex: match.index,
+        endIndex: match.index + match[0].length,
+        category: pattern.category
+      });
+    }
+  });
+  
+  // 6. Special policy phrases (case-insensitive exact matches)
+  specialPolicyPhrases.forEach(phrase => {
+    const regex = new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      addTermIfNoOverlap({
+        term: phrase,
+        fullPhrase: match[0],
+        startIndex: match.index,
+        endIndex: match.index + match[0].length,
+        category: 'special_policy_phrase'
+      });
+    }
+  });
+  
+  // Sort by start index and remove any remaining overlaps
+  return detectedTerms
+    .sort((a, b) => a.startIndex - b.startIndex)
+    .filter((term, index, array) => {
+      // Remove terms completely contained within another term
+      return !array.some((otherTerm, otherIndex) => 
+        otherIndex !== index &&
+        otherTerm.startIndex <= term.startIndex &&
+        otherTerm.endIndex >= term.endIndex
+      );
+    });
+}
+
 // Function to get context data for a political term
 export async function getContextData(term: string): Promise<ContextData | null> {
+  // First, resolve aliases to canonical term
+  let canonicalTerm = term;
+  for (const entry of POLITICAL_TERMS) {
+    if (entry.term.toLowerCase() === term.toLowerCase() || entry.aliases.map(a => a.toLowerCase()).includes(term.toLowerCase())) {
+      canonicalTerm = entry.term;
+      break;
+    }
+  }
   // First, check our static database for detailed information
   const contextDatabase: Record<string, ContextData> = {
     "Medicare": {
@@ -624,10 +818,13 @@ export async function getContextData(term: string): Promise<ContextData | null> 
   
   
   // Check if we have detailed static data for this term
-  if (contextDatabase[term]) {
-    return contextDatabase[term];
+  if (contextDatabase[canonicalTerm]) {
+    return contextDatabase[canonicalTerm];
   }
-  
-  // If not in static database, generate with AI
-  return await generateContextWithAI(term);
+  // If not in static database, try AI. If AI fails, return null (no generic fallback)
+  const aiResult = await generateContextWithAI(canonicalTerm);
+  if (aiResult && aiResult.briefRundown && !aiResult.briefRundown.toLowerCase().includes('is a political term or entity')) {
+    return aiResult;
+  }
+  return null;
 }
