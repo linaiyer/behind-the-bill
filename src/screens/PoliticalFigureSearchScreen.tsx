@@ -80,6 +80,7 @@ export default function PoliticalFigureSearchScreen({ route, navigation }: Polit
   };
 
   const selectFigure = (figure: PoliticalFigure) => {
+    console.log('selectFigure called with figure:', figure.name);
     if (navigation) {
       navigation.navigate('PoliticalChat', {
         figureId: figure.id,

@@ -16,6 +16,7 @@ import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { politicalChatService } from '../utils/politicalFigures';
 import { PoliticalFigure, ChatMessage, ChatResponse } from '../types/politicalChat';
+import { useUserPreferences, getThemeColors, getFontScale } from '../hooks/useUserPreferences';
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -42,6 +43,10 @@ const LIGHT_GRAY = '#f8f9fa';
 
 export default function PoliticalChatScreen({ route, navigation }: PoliticalChatScreenProps) {
   const { figureId, figureName } = route.params;
+  const { preferences } = useUserPreferences();
+  const themeColors = getThemeColors(preferences.display.darkMode);
+  const fontScale = getFontScale(preferences.display.fontSize);
+  
   const [figure, setFigure] = useState<PoliticalFigure | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
@@ -146,7 +151,7 @@ export default function PoliticalChatScreen({ route, navigation }: PoliticalChat
     ]}>
       <View style={[
         styles.messageBubble,
-        message.sender === 'user' ? styles.userBubble : styles.botBubble,
+        message.sender === 'user' ? styles.userBubble : [styles.botBubble, { backgroundColor: themeColors.card }],
         message.isBlocked && styles.blockedBubble
       ]}>
         {message.isBlocked && (
@@ -157,14 +162,14 @@ export default function PoliticalChatScreen({ route, navigation }: PoliticalChat
         )}
         <Text style={[
           styles.messageText,
-          message.sender === 'user' ? styles.userMessageText : styles.botMessageText,
+          message.sender === 'user' ? styles.userMessageText : [styles.botMessageText, { color: themeColors.text }],
           message.isBlocked && styles.blockedMessageText
         ]}>
           {message.text}
         </Text>
         <Text style={[
           styles.messageTime,
-          message.sender === 'user' ? styles.userMessageTime : styles.botMessageTime
+          message.sender === 'user' ? styles.userMessageTime : [styles.botMessageTime, { color: themeColors.secondaryText }]
         ]}>
           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </Text>
@@ -174,7 +179,7 @@ export default function PoliticalChatScreen({ route, navigation }: PoliticalChat
 
   const TypingIndicator = () => (
     <View style={styles.typingContainer}>
-      <View style={styles.typingBubble}>
+      <View style={[styles.typingBubble, { backgroundColor: themeColors.card }]}>
         <View style={styles.typingDots}>
           <View style={[styles.dot, styles.dot1]} />
           <View style={[styles.dot, styles.dot2]} />
@@ -186,24 +191,78 @@ export default function PoliticalChatScreen({ route, navigation }: PoliticalChat
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: themeColors.background }]}>
         <ActivityIndicator size="large" color={THEME_COLOR} />
-        <Text style={styles.loadingText}>Loading {figureName}...</Text>
+        <Text style={[styles.loadingText, { color: themeColors.secondaryText }]}>Loading {figureName}...</Text>
       </View>
     );
   }
 
+  // Create dynamic styles based on theme
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      ...styles.container,
+      backgroundColor: themeColors.background,
+    },
+    header: {
+      ...styles.header,
+      backgroundColor: themeColors.card,
+      borderBottomColor: themeColors.border,
+    },
+    headerName: {
+      ...styles.headerName,
+      color: themeColors.text,
+    },
+    headerTitle: {
+      ...styles.headerTitle,
+      color: themeColors.secondaryText,
+    },
+    messagesContainer: {
+      ...styles.messagesContainer,
+      backgroundColor: themeColors.background,
+    },
+    inputContainer: {
+      ...styles.inputContainer,
+      backgroundColor: themeColors.card,
+      borderTopColor: themeColors.border,
+    },
+    textInput: {
+      ...styles.textInput,
+      backgroundColor: themeColors.background,
+      borderColor: themeColors.border,
+      color: themeColors.text,
+    },
+    suggestionsContainer: {
+      ...styles.suggestionsContainer,
+      backgroundColor: themeColors.card,
+      borderTopColor: themeColors.border,
+    },
+    suggestionsTitle: {
+      ...styles.suggestionsTitle,
+      color: themeColors.text,
+    },
+    suggestionButton: {
+      ...styles.suggestionButton,
+      backgroundColor: themeColors.background,
+      borderColor: themeColors.border,
+    },
+    suggestionText: {
+      ...styles.suggestionText,
+      color: themeColors.text,
+    },
+  });
+
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={dynamicStyles.header}>
         <TouchableOpacity onPress={navigation.goBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={BLACK} />
+          <Ionicons name="arrow-back" size={24} color={themeColors.text} />
         </TouchableOpacity>
         
         <View style={styles.headerInfo}>
-          <Text style={styles.headerName}>{figure?.name}</Text>
-          <Text style={styles.headerTitle}>{figure?.title}</Text>
+          <Text style={dynamicStyles.headerName}>{figure?.name}</Text>
+          <Text style={dynamicStyles.headerTitle}>{figure?.title}</Text>
         </View>
 
         <View style={styles.headerRight}>
@@ -218,7 +277,7 @@ export default function PoliticalChatScreen({ route, navigation }: PoliticalChat
       {/* Chat Messages */}
       <ScrollView
         ref={scrollViewRef}
-        style={styles.messagesContainer}
+        style={dynamicStyles.messagesContainer}
         showsVerticalScrollIndicator={false}
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
@@ -229,17 +288,17 @@ export default function PoliticalChatScreen({ route, navigation }: PoliticalChat
       </ScrollView>
 
       {/* Suggested Questions */}
-      <View style={styles.suggestionsContainer}>
-        <Text style={styles.suggestionsTitle}>Suggested Questions:</Text>
+      <View style={dynamicStyles.suggestionsContainer}>
+        <Text style={dynamicStyles.suggestionsTitle}>Suggested Questions:</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.suggestionsScroll}>
             {suggestedQuestions.map((question, index) => (
               <TouchableOpacity
                 key={index}
-                style={styles.suggestionButton}
+                style={dynamicStyles.suggestionButton}
                 onPress={() => setInputText(question)}
               >
-                <Text style={styles.suggestionText}>{question}</Text>
+                <Text style={dynamicStyles.suggestionText}>{question}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -249,12 +308,13 @@ export default function PoliticalChatScreen({ route, navigation }: PoliticalChat
       {/* Input Section */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.inputContainer}
+        style={dynamicStyles.inputContainer}
       >
         <View style={styles.inputRow}>
           <TextInput
-            style={styles.textInput}
+            style={dynamicStyles.textInput}
             placeholder="Ask about political views and policies..."
+            placeholderTextColor={themeColors.secondaryText}
             value={inputText}
             onChangeText={setInputText}
             multiline

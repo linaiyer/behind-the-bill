@@ -34,7 +34,15 @@ export default function MainTabNavigator() {
     });
 
     return unsubscribe;
-  }, [user, previousUser]);
+  }, []);
+
+  useEffect(() => {
+    console.log('ChatState changed:', chatState);
+  }, [chatState]);
+
+  useEffect(() => {
+    console.log('SelectedTab changed:', selectedTab);
+  }, [selectedTab]);
 
   const loadUser = async () => {
     try {
@@ -62,11 +70,22 @@ export default function MainTabNavigator() {
   };
 
   const navigateToChat = (figureId: string, figureName: string) => {
-    setChatState({
-      screen: 'chat',
-      figureId,
-      figureName
+    console.log('navigateToChat called with:', figureId, figureName);
+    
+    // Use a callback to ensure the state is updated before switching tabs
+    setChatState(prevState => {
+      console.log('Updating chat state from:', prevState);
+      const newState = {
+        screen: 'chat' as const,
+        figureId,
+        figureName
+      };
+      console.log('New chat state:', newState);
+      return newState;
     });
+    
+    // Switch to chat tab
+    setSelectedTab('chat');
   };
 
   const navigateBackToSearch = () => {
@@ -74,11 +93,14 @@ export default function MainTabNavigator() {
   };
 
   const renderCurrentScreen = () => {
+    console.log('renderCurrentScreen - selectedTab:', selectedTab, 'chatState:', chatState);
+    
     switch (selectedTab) {
       case 'home':
         return <HomeScreen />;
       case 'chat':
         if (chatState.screen === 'chat' && chatState.figureId && chatState.figureName) {
+          console.log('Rendering PoliticalChatScreen with figureId:', chatState.figureId);
           return (
             <PoliticalChatScreen
               route={{
@@ -93,14 +115,17 @@ export default function MainTabNavigator() {
             />
           );
         }
+        console.log('Rendering PoliticalFigureSearchScreen');
         return (
           <PoliticalFigureSearchScreen
             navigation={{
               navigate: (screenName: string, params: any) => {
+                console.log('Mock navigation.navigate called with:', screenName, params);
                 if (screenName === 'PoliticalChat') {
                   navigateToChat(params.figureId, params.figureName);
                 }
-              }
+              },
+              goBack: () => setSelectedTab('home')
             } as any}
           />
         );

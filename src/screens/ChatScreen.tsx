@@ -45,7 +45,11 @@ export default function ChatScreen({ navigation }: any) {
   ];
 
   const sendMessage = () => {
-    if (!inputText.trim()) return;
+    console.log('sendMessage called with inputText:', inputText);
+    if (!inputText.trim()) {
+      console.log('No input text, returning');
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -54,6 +58,7 @@ export default function ChatScreen({ navigation }: any) {
       timestamp: new Date()
     };
 
+    console.log('Adding user message:', userMessage);
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
 
@@ -66,6 +71,7 @@ export default function ChatScreen({ navigation }: any) {
         timestamp: new Date(),
         persona: selectedPersona
       };
+      console.log('Adding bot response:', botResponse);
       setMessages(prev => [...prev, botResponse]);
     }, 1000);
   };
@@ -370,7 +376,10 @@ export default function ChatScreen({ navigation }: any) {
               dynamicStyles.sendButton,
               { backgroundColor: inputText.trim() ? '#3B82F6' : themeColors.border }
             ]}
-            onPress={sendMessage}
+            onPress={() => {
+              console.log('Send button pressed');
+              sendMessage();
+            }}
             disabled={!inputText.trim()}
           >
             <Ionicons 
